@@ -8,16 +8,17 @@ from geometry_msgs.msg import Twist  	 # for sending commands to the drone
 from std_msgs.msg import Empty       	 # for land/takeoff/emergency
 from ardrone_autonomy.msg import Navdata # for receiving navdata feedback
 
+import sys, select, termios, tty
+
 intro = """
 
 Keyboard Controls:
 
 t : 	Takeoff
 l : 	Land
-e :		Emergency State
-r :		Reset
-a :		Begin Tracking (to be implemented)
-q :		Quit
+r :	Reset
+a :	Begin Tracking (to be implemented)
+q :	Quit
 
 Press Ctrl + C to Quit ROS
 
@@ -37,7 +38,7 @@ class Controller(object):
 	
 
 	def getKey(self):
-		key = raw_input('Enter Command: ')
+		key = raw_input("Enter Command: ")
 		return key
 
 	def sendTakeoff(self):
@@ -66,16 +67,16 @@ if __name__=="__main__":
 		while(1):
 			key = controls.getKey()
 
-			if key == 't':
+			if key == "t":
 				print("Sent Takeoff")
 				controls.sendTakeoff()
-			elif key == 'l':
+			elif key == "l":
 				print("Sent Land")
 				controls.sendLand()
-			elif key == 'r':
+			elif key == "r":
 				print("Sent Reset")
-				controls.sendReset
-			elif key == 'q':
+				controls.sendReset()
+			elif key == "q":
 				controls.sendLand()
 				print("Quit")
 				break
