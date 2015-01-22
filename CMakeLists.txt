@@ -125,8 +125,8 @@ include_directories(
 #   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
-install( PROGRAMS src/controller.py
-			DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+install(PROGRAMS src/controller.py
+		DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 		)
 
 
