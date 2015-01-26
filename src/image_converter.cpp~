@@ -80,7 +80,7 @@ public:
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
 
-
+	Mat cameraFeed;
 	Mat cameraFeedCropped;
 	//matrix storage for HSV image
 	Mat HSV;
@@ -175,6 +175,9 @@ public:
 
 	}
 	
+
+
+/*
 		if (searchImg == true) {
 	
 			//
@@ -193,19 +196,17 @@ public:
 			
 			if (lost == true) {
 				
-				// Do the Matching and Normalize
-				int type1 = cv_ptr->image.type();
-				int type2 = croppedImage.type();
-				cout << "Search for image, first time!" << endl;
-				
-				cout << "Camera type: " << type1 << "\tcroppedImage type: " << type2 << endl;
-				if (type1 != type2) {
+				int rowsCamera = cv_ptr->image.rows;
+				int rowsCropped = croppedImage.rows;
+		
+				if (croppedImage.type() == CV_8U) {
 					//convert from CV_8U to CV_8UC3
-					croppedImage.convertTo(croppedImage, CV_8UC3, 1.0/255.0);
+					//cv::Mat fixImage;
+					//cvtColor(croppedImage,fixImage,CV_GRAY2RGB);
+					cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
+					//croppedImage = fixImage.clone();
 				}
-				type1 = cv_ptr->image.type();
-				type2 = croppedImage.type();
-				cout << "2nd attempt camera type: " << type1 << "\tcroppedImage type: " << type2 << endl;
+			
 				matchTemplate(cv_ptr->image, croppedImage, resultMoving, CV_TM_SQDIFF_NORMED);
 				 
 				
@@ -484,7 +485,7 @@ public:
 
 
 		}
-
+*/
 
     // Update GUI Window
     cv::imshow("Drone Camera", cv_ptr->image);
