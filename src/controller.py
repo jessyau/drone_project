@@ -14,11 +14,11 @@ intro = """
 
 Keyboard Controls:
 
-t : 	Takeoff
-l : 	Land
+t : Takeoff
+l : Land
 r :	Reset
 a :	Begin Tracking (to be implemented)
-q :	Quit
+q :	Qui
 
 Press Ctrl + C to Quit ROS
 
@@ -33,8 +33,8 @@ class Controller(object):
 		self.pubTakeoff = rospy.Publisher('/ardrone/takeoff',Empty)
 		self.pubReset   = rospy.Publisher('/ardrone/reset',Empty) 
 
-		self.pubCommand = rospy.Publisher('/cmd_vel',Twist)
-		self.twist = Twist()
+		self.pubMove = rospy.Publisher('/cmd_vel',Twist)
+		self.move = Twist()
 	
 
 	def getKey(self):
@@ -53,6 +53,25 @@ class Controller(object):
 	def sendReset(self):
 		self.pubReset.publish(Empty())
 
+	def setMovement(self, pitch=0, roll=0, yaw=0):
+		# x - forward (1)/ backward (-1) velocity 
+		# y - left (1) / right (-1) velocity
+		# z - up (1) /down (-1) velocity
+
+		self.move.linear.x = pitch
+		self.move.linear.y = roll
+		self.move.linear.z = yaw
+
+	def sendMovement(self):
+		self.pubMove.publish(Twist)
+
+	def autoMode(self, distance, angle):
+		self.sendTakeoff()
+		a = ((distance*tan(angle))**2) + 1
+		v_y = 0.05/(a**(1/2))
+		v_x = distance*tan(angle)*v_y
+		self.setMovement(self, v_x, v_y)
+		self.sendMovement()
 
 
 if __name__=="__main__":
@@ -76,6 +95,9 @@ if __name__=="__main__":
 			elif key == "r":
 				print("Sent Reset")
 				controls.sendReset()
+			elif key == "a":
+				print("Starting Auto Mode")
+				controls.autoMode()
 			elif key == "q":
 				controls.sendLand()
 				print("Quit")
