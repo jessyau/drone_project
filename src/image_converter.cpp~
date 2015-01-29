@@ -17,7 +17,60 @@
 using namespace std;
 using namespace cv;
 
+	Mat cameraFeed;
+	Mat cameraFeedCropped;
+	//matrix storage for HSV image
+	Mat HSV;
+	//matrix storage for binary threshold image
+	Mat threshold;
+	//x and y values for the location of the object
+	
 
+
+	Mat gray;
+	Mat tmpImage;
+
+
+	cv::Mat croppedImage;
+	cv::Mat croppedCamera;
+
+	cv::Rect myROI;
+	cv::Rect croppedCameraROI;
+	Mat resultOriginal;
+	Mat resultMoving;
+	Mat binary_image;
+	Mat movement;
+	Mat imageb;
+	Mat imageF;
+	double PrevMatchLocX = 0;
+	double PrevMatchLocY = 0;
+
+	int posCroppedCameraX = 0;
+	int posCroppedCameraY = 0;
+	int shiftCropped = 50;
+	int prePosCroppedCameraX = 0;
+	int prePosCroppedCameraY = 0;
+	int prePrePosCroppedCameraX = 0;
+	int prePrePosCroppedCameraY = 0;
+
+
+	int OriginalMatchLocMovingX = 0;
+	int OriginalMatchLocMovingY = 0;
+
+	bool lost = true;
+	bool freezeMoveImage = false;
+	bool firstCapture = true;
+	
+
+	bool calibrate = true;
+
+	int changeInX = 0;
+	int changeInY = 0;
+
+	bool hitLeftWall = false;
+	bool hitRightWall = false;
+	bool hitUpWall = false;
+	bool hitDownWall = false;
 
 //This rectangle is the for the area selected using the mouse
 int Rectanglex1;
@@ -80,65 +133,12 @@ public:
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
 
-	Mat cameraFeed;
-	Mat cameraFeedCropped;
-	//matrix storage for HSV image
-	Mat HSV;
-	//matrix storage for binary threshold image
-	Mat threshold;
-	//x and y values for the location of the object
-	
-
-
-	Mat gray;
-	Mat tmpImage;
-
-
-	cv::Mat croppedImage;
-	cv::Mat croppedCamera;
-
-	cv::Rect myROI;
-	cv::Rect croppedCameraROI;
-	Mat resultOriginal;
-	Mat resultMoving;
-	Mat binary_image;
-	Mat movement;
-	Mat imageb;
-	Mat imageF;
-	double PrevMatchLocX = 0;
-	double PrevMatchLocY = 0;
-
-	int posCroppedCameraX = 0;
-	int posCroppedCameraY = 0;
-	int shiftCropped = 50;
-	int prePosCroppedCameraX = 0;
-	int prePosCroppedCameraY = 0;
-	int prePrePosCroppedCameraX = 0;
-	int prePrePosCroppedCameraY = 0;
-
 	int x1 = 0;
 	int y1 = 0;
 	int x2 = 0;
 	int y2 = 0;
 
-	int OriginalMatchLocMovingX = 0;
-	int OriginalMatchLocMovingY = 0;
-
-	bool lost = true;
-	bool freezeMoveImage = false;
-	bool firstCapture = true;
 	double distance = 0;
-
-	bool calibrate = true;
-
-	int changeInX = 0;
-	int changeInY = 0;
-
-	bool hitLeftWall = false;
-	bool hitRightWall = false;
-	bool hitUpWall = false;
-	bool hitDownWall = false;
-
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
@@ -177,7 +177,7 @@ public:
 	
 
 
-/*
+
 		if (searchImg == true) {
 	
 			//
@@ -207,7 +207,7 @@ public:
 					//croppedImage = fixImage.clone();
 				}
 			
-				matchTemplate(cv_ptr->image, croppedImage, resultMoving, CV_TM_SQDIFF_NORMED);
+				matchTemplate(cv_ptr->image, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
 				 
 				
 			}
@@ -255,7 +255,7 @@ public:
 
 				
 				croppedCamera.convertTo(croppedCamera, CV_8UC3, 1.0/255.0);
-				matchTemplate(croppedCamera, croppedImage, resultMoving, CV_TM_SQDIFF_NORMED);
+				matchTemplate(croppedCamera, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
 				
 				cout << "\t      testing1 testing1: " << endl;
 
@@ -272,7 +272,7 @@ public:
 
 			/// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
 			
-			matchLocMoving = minLocMoving;
+			matchLocMoving = maxLocMoving;
 
 
 			distance = PrevMatchLocX - matchLocMoving.x;
@@ -485,7 +485,7 @@ public:
 
 
 		}
-*/
+
 
     // Update GUI Window
     cv::imshow("Drone Camera", cv_ptr->image);
