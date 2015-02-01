@@ -32,6 +32,7 @@ class Controller(object):
 		self.pubLand    = rospy.Publisher('/ardrone/land',Empty)
 		self.pubTakeoff = rospy.Publisher('/ardrone/takeoff',Empty)
 		self.pubReset   = rospy.Publisher('/ardrone/reset',Empty) 
+		self.pubToggle	= rospy.Publisher('/ardrone/togglecam', Empty)
 
 		self.pubMove = rospy.Publisher('/cmd_vel',Twist)
 		self.move = Twist()
@@ -52,6 +53,9 @@ class Controller(object):
 
 	def sendReset(self):
 		self.pubReset.publish(Empty())
+
+	def sendToggle(self):
+		self.pubToggle.publish(Empty())
 
 	def setMovement(self, pitch=0, roll=0, yaw=0):
 		# x - forward (1)/ backward (-1) velocity 
@@ -98,6 +102,9 @@ if __name__=="__main__":
 			elif key == "a":
 				print("Starting Auto Mode")
 				controls.autoMode()
+			elif key == "c":
+				print("Toggle Camera")
+				controls.sendToggle()
 			elif key == "q":
 				controls.sendLand()
 				print("Quit")
