@@ -10,8 +10,10 @@
 #include <stdio.h>
 #include <cv.h>
 #include <highgui.h>
-
 #include <math.h>
+
+#include "Header1.h"
+#include "Source1.cpp"
 
 
 using namespace std;
@@ -47,7 +49,7 @@ using namespace cv;
 
 	int posCroppedCameraX = 0;
 	int posCroppedCameraY = 0;
-	int shiftCropped = 50;
+	int shiftCropped = 30;
 	int prePosCroppedCameraX = 0;
 	int prePosCroppedCameraY = 0;
 	int prePrePosCroppedCameraX = 0;
@@ -71,6 +73,13 @@ using namespace cv;
 	bool hitRightWall = false;
 	bool hitUpWall = false;
 	bool hitDownWall = false;
+
+bool doOnce = false;
+
+bool useFullCamera = false;
+
+int lostCount = 0;
+double confidPercent = 1;
 
 //This rectangle is the for the area selected using the mouse
 int Rectanglex1;
@@ -102,6 +111,8 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata) {
 		Rectanglex2 = x;
 		Rectangley2 = y;
 		mouseUp = true;
+	} else if (event == EVENT_RBUTTONUP) {
+		lost = true;
 	}
 }
 
@@ -133,6 +144,10 @@ public:
   void imageCb(const sensor_msgs::ImageConstPtr& msg)
   {
 
+	/// Localizing the best match with minMaxLoc
+	double minValMoving; double maxValMoving; Point minLocMoving; Point maxLocMoving;
+	Point matchLocMoving;
+
 	int x1 = 0;
 	int y1 = 0;
 	int x2 = 0;
@@ -149,6 +164,13 @@ public:
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
     }
+	
+	try {
+	
+	if (doOnce == false) {
+		multiplyTwoNumbers(5, 2);
+		doOnce = true;
+	}
 
 	//set a callback duty for any rodent event
 	setMouseCallback("Drone Camera", CallBackFunc, NULL);
@@ -158,15 +180,16 @@ public:
 
 		cout << "x1 y1 (" << Rectanglex1 << ", " << Rectangley1 << ")" << endl;
 		cout << "x2 y2 (" << Rectanglex2 << ", " << Rectangley2 << ")" << endl;		
-
-		myROI = Rect(Rectanglex1, Rectangley1, abs(Rectanglex2 - Rectanglex1), 
+		
+		
+			myROI = Rect(Rectanglex1, Rectangley1, abs(Rectanglex2 - Rectanglex1), 
 						       abs(Rectangley2 - Rectangley1));
 
 
-		Mat imgPanelRoi(cv_ptr->image, myROI);
+			Mat imgPanelRoi(cv_ptr->image, myROI);
 
-		imgPanelRoi.copyTo(croppedImage);
-
+			imgPanelRoi.copyTo(croppedImage);
+		
 
 		mouseUp = false;
 		searchImg = true;
@@ -190,15 +213,20 @@ public:
 
 			resultOriginal.create(resultOriginal_cols, resultOriginal_rows, CV_32FC1);
 
+			cout << "confidPercent: " << confidPercent << endl;
+			if ((confidPercent < 0.6) && (lostCount <= 0)){
 
+				lost = true;
+				lostCount = 60;
 
+			}
 
 			
 			if (lost == true) {
 				
 				int rowsCamera = cv_ptr->image.rows;
 				int rowsCropped = croppedImage.rows;
-		
+				
 				if (croppedImage.type() == CV_8U) {
 					//convert from CV_8U to CV_8UC3
 					//cv::Mat fixImage;
@@ -206,10 +234,13 @@ public:
 					cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
 					//croppedImage = fixImage.clone();
 				}
-			
-				matchTemplate(cv_ptr->image, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
-				 
 				
+
+				if ((croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows))  						{				
+
+					matchTemplate(cv_ptr->image, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
+					useFullCamera = true;
+				}
 			}
 			else {
 
@@ -227,11 +258,13 @@ public:
 					y1 = 0;
 				}
 
-				croppedCameraROI = Rect(x1, y1, width, height);
-				Mat imgPanelRoi(cv_ptr->image, croppedCameraROI);
-				imgPanelRoi.copyTo(croppedCamera);
+				if ((x1 + width < cv_ptr->image.cols) && (y1 + height < cv_ptr->image.rows)) {
+					croppedCameraROI = Rect(x1, y1, width, height);
+					Mat imgPanelRoi(cv_ptr->image, croppedCameraROI);
+					imgPanelRoi.copyTo(croppedCamera);
+				}
 
-				
+
 				//make sure the 'search area' does not exceded the cameras image
 				x1 = PrevMatchLocX;
 				y1 = PrevMatchLocY;
@@ -245,31 +278,33 @@ public:
 					y2 = cv_ptr->image.rows;
 				}
 
-				
-				
-				imshow("Search Cropped Image", croppedCamera);
-
-				cout << "\t      testing testing: " << endl;
 
 				/// Do the Matching and Normalize
 
-				
-				croppedCamera.convertTo(croppedCamera, CV_8UC3, 1.0/255.0);
-				matchTemplate(croppedCamera, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
-				
-				cout << "\t      testing1 testing1: " << endl;
+				/*
+				if (croppedImage.type() == CV_8U) {
+					//convert from CV_8U to CV_8UC3
+					//cv::Mat fixImage;
+					//cvtColor(croppedImage,fixImage,CV_GRAY2RGB);
+					cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
+					//croppedImage = fixImage.clone();
+				}
+				*/
 
-				rectangle(croppedCamera, Point(x1, y1), Point(x2, y2), Scalar(0, 255, 0), 2, 8, 0);
+				if ((!(croppedCamera.empty())) && (croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows)) {
 
+					matchTemplate(croppedCamera, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
+				
+					useFullCamera = false;
+					
+				}
 			}
 
-			/// Localizing the best match with minMaxLoc
-			double minValMoving; double maxValMoving; Point minLocMoving; Point maxLocMoving;
-			Point matchLocMoving;
+
 			
 			minMaxLoc(resultMoving, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
 
-
+			confidPercent = maxValMoving;
 			/// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
 			
 			matchLocMoving = maxLocMoving;
@@ -277,14 +312,24 @@ public:
 
 			distance = PrevMatchLocX - matchLocMoving.x;
 			//distanceY = PrevMatchLocY - matchLocMoving.y;
+			
 
-				
+			lostCount = lostCount - 1;
+			if (lostCount < 0) {
+				lostCount = 0;
+			}
+
 				if (lost == true) {
 					posCroppedCameraX = matchLocMoving.x - shiftCropped;
 					posCroppedCameraY = matchLocMoving.y - shiftCropped;
 
-					lost = false;
+
 					calibrate = true;
+					
+					hitLeftWall = false;
+					hitRightWall = false;
+					hitUpWall = false;
+					hitDownWall = false;
 
 					//store original matchLocMoving values to be used as a reference
 					OriginalMatchLocMovingX = matchLocMoving.x;
@@ -335,31 +380,31 @@ public:
 					}
 
 					
-					if ((posCroppedCameraX > 50) && (hitLeftWall == true)) {
+					if ((posCroppedCameraX > shiftCropped) && (hitLeftWall == true)) {
 						posCroppedCameraX = 0;
-						prePosCroppedCameraX = 50;
-						matchLocMoving.x = 50;
+						prePosCroppedCameraX = shiftCropped;
+						matchLocMoving.x = shiftCropped;
 						hitLeftWall = false;
 					}
 					
 					if ((posCroppedCameraX < cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 2) - 51) && (hitRightWall == true)) {
-						posCroppedCameraX = cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 2) - 51;
+						posCroppedCameraX = cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 2) - shiftCropped - 1;
 						prePosCroppedCameraX = cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 2) - 1;
-						matchLocMoving.x = 50;
+						matchLocMoving.x = shiftCropped;
 						hitRightWall = false;
 					}
 
-					if ((posCroppedCameraY > 50) && (hitUpWall == true)) {
+					if ((posCroppedCameraY > shiftCropped) && (hitUpWall == true)) {
 						posCroppedCameraY = 0;
-						prePosCroppedCameraY = 50;
-						matchLocMoving.y = 50;
+						prePosCroppedCameraY = shiftCropped;
+						matchLocMoving.y = shiftCropped;
 						hitUpWall = false;
 					}
 
 					if ((posCroppedCameraY < cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - 51) && (hitDownWall == true)) {
-						//posCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - 51;
-						//prePosCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - 1;
-						//matchLocMoving.y = 50;
+						posCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - shiftCropped - 1;
+						prePosCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - 1;
+						matchLocMoving.y = shiftCropped;
 						hitDownWall = false;
 					}
 
@@ -372,11 +417,7 @@ public:
 
 					
 				}
-				
-				if (minValMoving > 0.3) {
-					//lost = true;
-				}
-				
+
 
 				x1 = posCroppedCameraX;
 				y1 = posCroppedCameraY;
@@ -419,10 +460,15 @@ public:
 				//draw blue rectangle around 
 				rectangle(cv_ptr->image, Point(x1, y1), Point(x2, y2), Scalar(255, 0, 0), 2, 8, 0);
 
-				//if (matchLocMoving.x < OriginalMatchLocMovingX) {
-					
-					
-				//}
+				if (lost == true) {
+					matchLocMoving.x = shiftCropped;
+					matchLocMoving.y = shiftCropped;
+					prePrePosCroppedCameraX = 0;
+					prePrePosCroppedCameraY = 0;
+					prePosCroppedCameraX = 0;
+					prePosCroppedCameraY = 0;
+				}
+				lost = false;
 
 
 				x1 = posCroppedCameraX + matchLocMoving.x;
@@ -460,28 +506,25 @@ public:
 				double distance = sqrt(abs(x1 - FRAME_WIDTH / 2) * abs(x1 - FRAME_WIDTH / 2) + 
 					abs(y1 - FRAME_HEIGHT) * abs(y1 - FRAME_HEIGHT));
 
-				if ((x1 - FRAME_WIDTH / 2) != 0) {
-					double angle = atan2((y1 + (y2 - y1) / 2 - FRAME_HEIGHT / 2), 
-										 (x1 + (x2 - x1) / 2 - FRAME_WIDTH / 2)) / 3.15159265 * 180;
+				double angle = atan2((y1 + (y2 - y1) / 2 - FRAME_HEIGHT / 2), 
+					(x1 + (x2 - x1) / 2 - FRAME_WIDTH / 2)) / 3.15159265 * 180;
 				
-					cout << "\t      angle: " << angle << endl;
+				//cout << "\t      angle: " << angle << "\tdistsance: " << distance << endl;
 
-					//cout << "\t      x1: " << x1 << endl;
-					//cout << "\t      y1: " << y1 << endl;
-
-				}
 				//draw green rectangle around object
-				rectangle(cv_ptr->image, Point(x1, y1), Point(x2, y2), Scalar(0, 255, 0), 2, 8, 0);
-				line(cv_ptr->image, Point(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2), Point(FRAME_WIDTH / 2, FRAME_HEIGHT / 2), Scalar(0, 255, 0), 3, 1, 0);
-
+				if (useFullCamera == false) {
+					rectangle(cv_ptr->image, Point(x1, y1), Point(x2, y2), Scalar(0, 255, 0), 2, 8, 0);
+					line(cv_ptr->image, Point(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2), Point(FRAME_WIDTH / 2,FRAME_HEIGHT / 2), Scalar(0, 255, 0), 3, 1, 0);
+				}
 			circle(resultMoving, matchLocMoving, 15, Scalar(255, 255, 255), 2, 8, 0);
 			
 
-
-			imshow("Results Moving", resultMoving);
-
-			imshow("Search Images", croppedImage);
-			
+			if (!(resultMoving.empty())) {
+				imshow("Results Moving", resultMoving);
+			}
+			if (!(croppedImage.empty())) {
+				imshow("Search Images", croppedImage);
+			}
 
 
 		}
@@ -494,7 +537,11 @@ public:
     // Output modified video stream
     image_pub_.publish(cv_ptr->toImageMsg());
 
-
+	}
+	catch (...) {
+		posCroppedCameraX = prePosCroppedCameraX;
+		posCroppedCameraY = prePosCroppedCameraY;
+	}
 	
   }
 };
