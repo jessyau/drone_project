@@ -59,10 +59,10 @@ class controller
 {
 public:
 	controller(){}
-	void Init(string a, int b , int argc, char** argv)
+    void Init(int b , int argc, char** argv)
 	{
 		ros::init(argc, argv, "controller");
-		command = a;
+//		command = a;
 		inFlight = b;
 	}
 	string key;
@@ -250,7 +250,7 @@ void finalize()
 		tcsetattr(STDIN_FILENO, TCSANOW, &initial_settings);
 }
 //---------------------------------------------------------------------------
-
+/*
 int main(int argc, char** argv)
 {
 	controller controls;
@@ -320,10 +320,10 @@ else
 cout << "Try again.";
 }
 
-*/
+
 
 finalize();
 ROS_INFO("Closing Node");
 exit(0);
 }
-
+*/

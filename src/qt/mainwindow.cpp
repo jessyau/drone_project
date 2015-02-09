@@ -6,6 +6,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 #include <QtWidgets>
+#include "controller.cpp"
 
 using namespace cv;
 using namespace std;
@@ -16,6 +17,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    controls.Init(0);
+
+    ui->lblStatus->setText("Battery is :"+ QString::number(controls.getBattery()));
+
+
+
+    /*
     Mat inMat;
         inMat = imread("Lenna.jpg");   // Read the file
 
@@ -25,7 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lblScreenshot->setPixmap(QPixmap::fromImage(image));
 
     ui->lblScreenshot->adjustSize();
-
+*/
 
 
 }
@@ -36,3 +44,14 @@ MainWindow::~MainWindow()
 }
 
 
+// calling control functions that twist the drone to the left
+
+void MainWindow::on_btnForward_pressed()
+{
+
+}
+
+void MainWindow::on_btnForward_released()
+{
+
+}
