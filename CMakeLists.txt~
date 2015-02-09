@@ -15,6 +15,10 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(OpenCV)
 
+include_directories(  ${catkin_INCLUDE_DIRS})
+
+include_directories(  ${OpenCV_INCLUDE_DIRS})
+
 # Find the QtWidgets library
 set(CMAKE_PREFIX_PATH /home/arianna/qt5/qt/5.4/gcc_64)
 
@@ -24,15 +28,17 @@ find_package(Qt5Gui)
 
 
 
-catkin_package()
+#catkin_package(INCLUDE_DIRS include LIBRARIES drone_project)
 
-include_directories(  ${catkin_INCLUDE_DIRS})
+# The image converter
 
-include_directories(  ${OpenCV_INCLUDE_DIRS})
+#add_executable(image_converter src/image_converter.cpp)
+#target_link_libraries(image_converter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
-add_executable(image_converter src/image_converter.cpp)
-target_link_libraries(image_converter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+# The controller
 
+add_executable(controller src/controller.cpp)
+target_link_libraries(controller ${catkin_LIBRARIES})
 
 # The UI Frame
 #add_executable(UI src/qt/mainwindow.h src/qt/main.cpp src/qt/mainwindow.cpp src/qt/mainwindow.ui)
