@@ -75,6 +75,7 @@ public:
 	void sendLand(ros::NodeHandle);
 	void sendReset(ros::NodeHandle);
 	void setMovement(double, double, double);
+	void setTurn(double);
 	void resetTwist();
 	void sendMovement(ros::NodeHandle);
 	void autoMode(ros::NodeHandle);
@@ -82,6 +83,7 @@ public:
 	void gainAltitude(double, ros::NodeHandle);
 	void nav_callback(const ardrone_autonomy::Navdata&);
 	void proportional(double, double, double, double);
+	void hover(ros::NodeHandle);
 	double getBattery();
 	double getAltitude();
 	geometry_msgs::Twist getTwist();
@@ -172,6 +174,14 @@ void controller::setMovement(double pitch, double roll, double yaw)
 	twist_msg.linear.y = 0.11*roll;
 	twist_msg.linear.z = 0.11*yaw;
 }
+
+// -angular.z: turn left
+// +angular.z: turn right
+void controller::setTurn(double ang)
+{
+	twist_msg.angular.z = ang;
+}
+
 //Resets Twist message values to 0 -- essentailly hovers drone if in flight
 void controller::resetTwist()
 {
@@ -183,6 +193,12 @@ void controller::resetTwist()
 void controller::sendMovement(ros::NodeHandle node)
 {
 	pubTwist.publish(twist_msg);
+}
+
+void controller::hover(ros::NodeHandle node)
+{
+	controller::resetTwist();
+	controller::sendMovement(node);
 }
 //Moves forward for 3 seconds, moves backwards 3 seconds
 //Press Enter for emergency land

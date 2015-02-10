@@ -47,104 +47,130 @@ MainWindow::~MainWindow()
 
 // calling control functions that twist the drone to the left
 
-void MainWindow::on_btnForward_pressed()
+void MainWindow::on_btnForward_pressed(ros::NodeHandle node)
+{
+    controls.setMovement(1,0,0);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnForward_released(ros::NodeHandle node)
+{
+    controls.hover();
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnBackward_pressed(ros::NodeHandle node)
+{
+    controls.setMovement(-1,0,0);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnBackward_released(ros::NodeHandle node)
+{
+    controls.hover(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnLeft_pressed(ros::NodeHandle node)
+{
+    controls.setMovement(0,1,0);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnLeft_released(ros::NodeHandle node)
+{
+    controls.hover(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnRight_pressed(ros::NodeHandle node)
+{
+    controls.setMovement(0,-1,0);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnRight_released(ros::NodeHandle node)
+{
+    controls.hover(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnTurnLeft_pressed(ros::NodeHandle node)
+{
+    controls.setTurn(-1);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnTurnLeft_released(ros::NodeHandle node)
+{
+    controls.setTurn(0);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnTurnRight_pressed(ros::NodeHandle node)
+{
+    controls.setTurn(1);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnTurnRight_released(ros::NodeHandle node)
+{
+    controls.setTurn(0);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+
+void MainWindow::on_btnHover_clicked(ros::NodeHandle node)
+{
+    controls.hover(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnUp_pressed(ros::NodeHandle node)
+{
+    controls.setMovement(0,0,1);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnUp_released(ros::NodeHandle node)
+{
+    controls.hover(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnDown_pressed(ros::NodeHandle node)
+{
+    controls.setMovement(0,0,-1);
+    controls.sendMovement(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnDown_released(ros::NodeHandle node)
+{
+    controls.hover(node);
+    ros::spinOnce();
+}
+
+void MainWindow::on_btnResetTracking_clicked(ros::NodeHandle node)
 {
 
 }
 
-void MainWindow::on_btnForward_released()
+void MainWindow::on_btnTakeoffOrLand_clicked(ros::NodeHandle node)
 {
-
+    controls.sendTakeoff(node);
 }
 
-void MainWindow::on_btnBackward_pressed()
+void MainWindow::on_btnEmergOrRegular_clicked(ros::NodeHandle node)
 {
-
-}
-
-void MainWindow::on_btnBackward_released()
-{
-
-}
-
-void MainWindow::on_btnLeft_pressed()
-{
-
-}
-
-void MainWindow::on_btnLeft_released()
-{
-
-}
-
-void MainWindow::on_btnRight_pressed()
-{
-
-}
-
-void MainWindow::on_btnRight_released()
-{
-
-}
-
-void MainWindow::on_btnTurnLeft_pressed()
-{
-
-}
-
-void MainWindow::on_btnTurnLeft_released()
-{
-
-}
-
-void MainWindow::on_btnTurnRight_pressed()
-{
-
-}
-
-void MainWindow::on_btnTurnRight_released()
-{
-
-}
-
-
-
-void MainWindow::on_btnHover_clicked()
-{
-
-}
-
-void MainWindow::on_btnUp_pressed()
-{
-
-}
-
-void MainWindow::on_btnUp_released()
-{
-
-}
-
-void MainWindow::on_btnDown_pressed()
-{
-
-}
-
-void MainWindow::on_btnDown_released()
-{
-
-}
-
-void MainWindow::on_btnResetTracking_clicked()
-{
-
-}
-
-void MainWindow::on_btnTakeoffOrLand_clicked()
-{
-
-}
-
-void MainWindow::on_btnEmergOrRegular_clicked()
-{
-
+    controls.sendReset(node);
 }

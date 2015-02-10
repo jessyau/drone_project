@@ -42,49 +42,50 @@ private slots:
 
     void updateResultMatching(Mat resultMatching);
 
-    void on_btnForward_pressed();
+    void on_btnForward_pressed(ros::NodeHandle);
 
-    void on_btnForward_released();
+    void on_btnForward_released(ros::NodeHandle);
 
-    void on_btnBackward_pressed();
+    void on_btnBackward_pressed(ros::NodeHandle);
 
-    void on_btnBackward_released();
+    void on_btnBackward_released(ros::NodeHandle);
 
-    void on_btnLeft_pressed();
+    void on_btnLeft_pressed(ros::NodeHandle);
 
-    void on_btnLeft_released();
+    void on_btnLeft_released(ros::NodeHandle);
 
-    void on_btnRight_pressed();
+    void on_btnRight_pressed(ros::NodeHandle);
 
-    void on_btnRight_released();
+    void on_btnRight_released(ros::NodeHandle);
 
-    void on_btnTurnLeft_pressed();
+    void on_btnTurnLeft_pressed(ros::NodeHandle);
 
-    void on_btnTurnLeft_released();
+    void on_btnTurnLeft_released(ros::NodeHandle);
 
-    void on_btnTurnRight_pressed();
+    void on_btnTurnRight_pressed(ros::NodeHandle);
 
-    void on_btnTurnRight_released();
+    void on_btnTurnRight_released(ros::NodeHandle);
 
-    void on_btnHover_clicked();
+    void on_btnHover_clicked(ros::NodeHandle);
 
-    void on_btnUp_pressed();
+    void on_btnUp_pressed(ros::NodeHandle);
 
-    void on_btnUp_released();
+    void on_btnUp_released(ros::NodeHandle);
 
-    void on_btnDown_pressed();
+    void on_btnDown_pressed(ros::NodeHandle);
 
-    void on_btnDown_released();
+    void on_btnDown_released(ros::NodeHandle);
 
-    void on_btnResetTracking_clicked();
+    void on_btnResetTracking_clicked(ros::NodeHandle);
 
-    void on_btnTakeoffOrLand_clicked();
+    void on_btnTakeoffOrLand_clicked(ros::NodeHandle);
 
-    void on_btnEmergOrRegular_clicked();
+    void on_btnEmergOrRegular_clicked(ros::NodeHandle);
 
 private:
     Ui::MainWindow *ui;
 
+    ros::NodeHandle node;
     controller controls;
 
     Mat MatOriginal;
