@@ -46,6 +46,42 @@ private slots:
 
     void on_btnForward_released();
 
+    void on_btnBackward_pressed();
+
+    void on_btnBackward_released();
+
+    void on_btnLeft_pressed();
+
+    void on_btnLeft_released();
+
+    void on_btnRight_pressed();
+
+    void on_btnRight_released();
+
+    void on_btnTurnLeft_pressed();
+
+    void on_btnTurnLeft_released();
+
+    void on_btnTurnRight_pressed();
+
+    void on_btnTurnRight_released();
+
+    void on_btnHover_clicked();
+
+    void on_btnUp_pressed();
+
+    void on_btnUp_released();
+
+    void on_btnDown_pressed();
+
+    void on_btnDown_released();
+
+    void on_btnResetTracking_clicked();
+
+    void on_btnTakeoffOrLand_clicked();
+
+    void on_btnEmergOrRegular_clicked();
+
 private:
     Ui::MainWindow *ui;
 
