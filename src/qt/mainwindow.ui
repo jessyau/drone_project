@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0" rowspan="3" colspan="2">
-     <widget class="QLabel" name="lblVideofeed">
+     <widget class="widget" name="lblVideofeed">
       <property name="minimumSize">
        <size>
         <width>400</width>

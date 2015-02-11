@@ -22,6 +22,8 @@
 #include <ardrone_autonomy/Navdata.h>
 #include "controller.cpp"
 
+#include "widget.h"
+
 using namespace cv;
 using namespace std;
 
