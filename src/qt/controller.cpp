@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <termios.h>
 #include <poll.h>
+#include <ardrone_autonomy/Navdata.h>
+#include "controller.h"
 
 using namespace std;
 static bool initialized = false;
@@ -55,40 +57,42 @@ bool iskeypressed(unsigned timeout_ms = 0)
 	return poll(pls, 1, timeout_ms) > 0;
 }
 //---------------------------------------------------------------------------
-class controller
-{
-public:
-	controller(){}
-    void Init(int b , int argc, char** argv)
-	{
-		ros::init(argc, argv, "controller");
-//		command = a;
-		inFlight = b;
-	}
-	string key;
-	int inFlight;
-	ros::Publisher pubLand, pubTakeoff, pubReset, pubTwist, pubGetNav;
-	ros::Subscriber nav_sub;
-	void getKey();
-	void sendTakeoff(ros::NodeHandle);
-	void sendLand(ros::NodeHandle);
-	void sendReset(ros::NodeHandle);
-	void setMovement(double, double, double);
-	void resetTwist();
-	void sendMovement(ros::NodeHandle);
-	void autoMode(ros::NodeHandle);
-	void testMove(ros::Rate, ros::NodeHandle);
-	void gainAltitude(double, ros::NodeHandle);
-	void nav_callback(const ardrone_autonomy::Navdata&);
-	void proportional(double, double, double, double);
-	double getBattery();
-	double getAltitude();
-	geometry_msgs::Twist getTwist();
-private:
-	geometry_msgs::Twist twist_msg;
-	std_msgs::Empty emp_msg;
-	string command;
-};
+	// class controller
+	// {
+	// public:
+	// 	controller(){}
+	// 	void Init(string a, int b , int argc, char** argv)
+	// 	{
+	// 		ros::init(argc, argv, "controller");
+	// 		command = a;
+	// 		inFlight = b;
+	// 	}
+	// 	string key;
+	// 	int inFlight;
+	// 	ros::Publisher pubLand, pubTakeoff, pubReset, pubTwist, pubGetNav;
+	// 	ros::Subscriber nav_sub;
+	// 	void getKey();
+	// 	void sendTakeoff(ros::NodeHandle);
+	// 	void sendLand(ros::NodeHandle);
+	// 	void sendReset(ros::NodeHandle);
+	// 	void setMovement(double, double, double);
+	// 	void setTurn(double);
+	// 	void resetTwist();
+	// 	void sendMovement(ros::NodeHandle);
+	// 	void autoMode(ros::NodeHandle);
+	// 	void testMove(ros::Rate, ros::NodeHandle);
+	// 	void gainAltitude(double, ros::NodeHandle);
+	// 	void nav_callback(const ardrone_autonomy::Navdata&);
+	// 	void proportional(double, double, double, double);
+	// 	void hover(ros::NodeHandle);
+	// 	double getBattery();
+	// 	double getAltitude();
+	// 	geometry_msgs::Twist getTwist();
+	// private:
+	// 	geometry_msgs::Twist twist_msg;
+	// 	std_msgs::Empty emp_msg;
+	// 	string command;
+	// };
 /*Initializes the controller object
 controller(string a, int b, int argc, char** argv)
 {
@@ -97,6 +101,9 @@ command = a;
 inFlight = b;
 }pubTakeoff
 */
+
+
+
 void nav_callback(const ardrone_autonomy::Navdata& msg_in)
 {
 	battery = msg_in.batteryPercent;
@@ -105,6 +112,15 @@ altitude = msg_in.altd*0.001; //mm to m
 vx = msg_in.vx*0.001; // From mm/s to m/s
 vy = msg_in.vy*0.001;
 }
+
+
+	void controller::Init(string a, int b , int argc, char** argv)
+	{
+//		ros::init(argc, argv, "controller");
+		command = a;
+		inFlight = b;
+	}
+
 double controller::getBattery()
 {
 	return battery;
@@ -171,6 +187,14 @@ void controller::setMovement(double pitch, double roll, double yaw)
 	twist_msg.linear.y = 0.11*roll;
 	twist_msg.linear.z = 0.11*yaw;
 }
+
+// -angular.z: turn left
+// +angular.z: turn right
+void controller::setTurn(double ang)
+{
+	twist_msg.angular.z = ang;
+}
+
 //Resets Twist message values to 0 -- essentailly hovers drone if in flight
 void controller::resetTwist()
 {
@@ -182,6 +206,12 @@ void controller::resetTwist()
 void controller::sendMovement(ros::NodeHandle node)
 {
 	pubTwist.publish(twist_msg);
+}
+
+void controller::hover(ros::NodeHandle node)
+{
+	controller::resetTwist();
+	controller::sendMovement(node);
 }
 //Moves forward for 3 seconds, moves backwards 3 seconds
 //Press Enter for emergency land
@@ -258,18 +288,7 @@ int main(int argc, char** argv)
 	{
 		return 1;
 	}
-// try {
-// linebuffered( false );
-// echo( false );
-// while (true)
-// {
-// cout << "Zzz..." << flush;
-// if (iskeypressed( 500 ) && cin.get() == '\n') break;
-// }
-// echo();
-// linebuffered();
-// }
-// catch (...) { }
+
 	controls.Init("-1", 0, argc, argv);
 	ros::NodeHandle node;
 	controls.pubLand = node.advertise<std_msgs::Empty>("/ardrone/land", 1);
@@ -280,50 +299,9 @@ int main(int argc, char** argv)
 //int quit = 0;
 	StartMenu();
 
-/*
-while (true)
-{
-controls.getKey();
-if (controls.key.compare("t") == 0)
-{
-controls.sendTakeoff(node);
-cout << "Sent Takeoff\n";
-cout << "inFlight: " << controls.inFlight << "\n";
-}
-else if (controls.key.compare("l") == 0)
-{
-controls.sendLand(node);
-cout << "Sent Land\n";
-cout << "inFlight: " << controls.inFlight << "\n";
-}
-else if (controls.key.compare("r") == 0)
-{
-controls.sendReset(node);
-cout << "Sent Reset\n";
-}
-else if (controls.key.compare("a") == 0)
-{
-cout << "Starting AutoMode\nPress Enter to quit autoMode\n";
-controls.autoMode(node);
-}
-else if (controls.key.compare("s") == 0)
-{
-cout << "Starting Test Flight\nPress Enter to quit Test Flight\n";
-controls.testMove(loop_rate, node);
-}
-else if (controls.key.compare("q") == 0)
-{
-cout<<"Exiting\n";
-break;
-}
-else
-cout << "Try again.";
-}
-
-
-
 finalize();
 ROS_INFO("Closing Node");
 exit(0);
 }
+
 */

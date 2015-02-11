@@ -9,7 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#include "controller.cpp"
+#include "controller.h"
 
 using namespace cv;
 
@@ -28,11 +28,10 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
+    explicit MainWindow(int argc, char **argv, QWidget *parent = 0);
     ~MainWindow();
 
-private slots:
-
+public slots: 
 
     void updateGUI();
 
@@ -41,6 +40,8 @@ private slots:
     void updateCropped(Mat cropped);
 
     void updateResultMatching(Mat resultMatching);
+
+private slots:
 
     void on_btnForward_pressed(ros::NodeHandle);
 
@@ -96,7 +97,7 @@ private:
     QImage qimgCropped;
     QImage qimgResultMatching;
 
-
+ //   QLabel lblStatus;
 
     QTimer* tmrTimer;
 

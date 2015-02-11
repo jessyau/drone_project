@@ -1,10 +1,15 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(drone_project)
 
+set(CMAKE_COMMAND /usr/local/bin/cmake)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 # Make it automatically compiles Qt project
 set(CMAKE_AUTOMOC ON)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+MESSAGE([STATUS] "CMAKE version : " ${CMAKE_MAJOR_VERSION} ${CMAKE_MINOR_VERSION} ${CMAKE_PATCH_VERSION})
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
@@ -16,9 +21,6 @@ find_package(catkin REQUIRED COMPONENTS
 find_package(OpenCV)
 
 include_directories(  ${catkin_INCLUDE_DIRS})
-
-
-
 include_directories(  ${OpenCV_INCLUDE_DIRS})
 
 # Find the QtWidgets library
@@ -28,10 +30,6 @@ find_package(Qt5Widgets)
 find_package(Qt5Core)
 find_package(Qt5Gui)
 
-
-
-#catkin_package(INCLUDE_DIRS include LIBRARIES drone_project)
-
 # The image converter
 
 #add_executable(image_converter src/image_converter.cpp)
@@ -39,15 +37,14 @@ find_package(Qt5Gui)
 
 # The controller
 
-add_executable(controller src/controller.cpp)
-target_link_libraries(controller ${catkin_LIBRARIES})
+#add_executable(controller src/controller.cpp)
+#target_link_libraries(controller ${catkin_LIBRARIES})
 
 # The UI Frame
-#add_executable(UI src/qt/mainwindow.h src/qt/main.cpp src/qt/mainwindow.cpp src/qt/mainwindow.ui)
-#target_link_libraries(UI Qt5::Widgets Qt5::Gui Qt5::Core ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+add_executable(UI src/qt/main.cpp src/qt/mainwindow.cpp src/qt/mainwindow.h src/qt/mainwindow.ui)
+target_link_libraries(UI Qt5::Widgets Qt5::Gui Qt5::Core ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 
-catkin_package(INCLUDE_DIRS include
-LIBRARIES drone_project)
+catkin_package(INCLUDE_DIRS include LIBRARIES drone_project)
 
 install(DIRECTORY include/${PROJECT_NAME}/
 DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
