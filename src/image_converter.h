@@ -23,11 +23,11 @@ public:
 		image_sub_ = it_.subscribe("/ardrone/image_raw", 1,
 			&ImageConverter::imageCb, this);
 		image_pub_ = it_.advertise("/image_converter/output_video", 1);
-		cv::namedWindow("Drone Camera");
+//		cv::namedWindow("Drone Camera");
 	}
 	~ImageConverter()
 	{
-		cv::destroyWindow("Drone Camera");
+//		cv::destroyWindow("Drone Camera");
 	}
 	void setMouseLeftClickDown(int Rectanglex1, int Rectangley1);
 	void setMouseLeftRelease(int Rectanglex2, int Rectangley2);

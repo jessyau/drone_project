@@ -6,6 +6,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <iostream>
 #include <QtWidgets>
+#include <QtCore>
+
 
 #include <ros/ros.h>
 #include <sstream>
@@ -39,37 +41,44 @@ MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    land = 1;
+    count = 0;
+ //   tmrTimer = new QTimer(this);
+    
+ 
+    
 //    ros::init(argc, argv, "controller");
-    controls.Init("-1", 0, argc, argv);
-    ros::NodeHandle node;
-    
-    
-    if (!initialize())
-    {
-       return ;
-    }
+//    controls.Init("-1", 0, argc, argv);
 
-    ImageConverter ic(node);
-    ros::spin();
+//    ros::NodeHandle node;
+//    controls.nav_sub = node.subscribe("/ardrone/navdata", 1, &(nav_callback));
 
-    ui->lblVideofeed->setPixmap(QPixmap::fromImage(cvMatToQImage(ic.getCameraFeed())));
-    /*
+ //   if (!initialize()){  return ;}
+    ui->lblStatus->setText("Battery: " + QString::number(argc) + ". Altitude: " + QString::number(150));
+//    ImageConverter ic(node);
+ //  ros::spinOnce();
+    
+ //   ros::Rate loop_rate(100);
+//    MatOriginal = ic.getCameraFeed();
+/*    image_transport::Subscriber image_sub_;
+    image_transport::ImageTransport it_(node);
+    image_sub_ = it_.subscribe("/ardrone/image_raw", 1, &MainWindow::qtCallBack, this);
+*/
+//    ui->txtStatus->setText("Getting from controls, Altitude : " );//+ QString::number(controls.getAltitude())
+/*    
     controls.pubLand = node.advertise<std_msgs::Empty>("/ardrone/land", 1);
     controls.pubReset = node.advertise<std_msgs::Empty>("/ardrone/reset", 1);
     controls.pubTakeoff = node.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
     controls.pubTwist = node.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-    */
+ */   
 
 
 
  //   ui->lblVideofeed->setText("Battery is :"+ QString::number(controls.getBattery()));
 
-    tmrTimer = new QTimer(this);
-    connect(tmrTimer, SIGNAL(timeout()), this, SLOT(updateGUI(ImageConverter ic)));
-    tmrTimer->start(20);
+    
 
-    /******
+ /******
      * This is how to put a image into a label using cv::Mat and QImage
     Mat inMat;
         inMat = imread("Lenna.jpg");   // Read the file
@@ -81,22 +90,52 @@ MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
 
     ui->lblScreenshot->adjustSize();
 */
+/*    connect(tmrTimer, SIGNAL(timeout()), this, SLOT(this->updateGUI()));
+    connect(ui->btnTakeoffOrLand, SIGNAL(clicked()), this, SLOT(on_btnTakeoffOrLand_clicked(3)) );
+    connect(ui->btnEmergOrRegular, SIGNAL(clicked()), this, SLOT(on_btnEmergOrRegular_clicked(node)));
+    tmrTimer->start(20);
+*/
 
-
+//    ros::spinOnce();
 }
 
 MainWindow::~MainWindow()
 {
+    ros::shutdown();
     delete ui;
 }
 
+//timer works fine. this function is used for testing buttons -- all test works fine
+void MainWindow::testTimer(){
+    ui->lblStatus->setText(QString::number(count));
+    count++;
+}
+
+void MainWindow::qtCallBack(const sensor_msgs::ImageConstPtr& msg){
+    try
+    {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+}
+
 void MainWindow::updateGUI(ImageConverter ic){
-    updateOriginal(ic.getCameraFeed());
+//    ros::spinOnce();
+    MatOriginal = cv_ptr->image;
+    updateOriginal(MatOriginal);
+    
+//    MatOriginal = ic.getCameraFeed();
+    
 }
 
 void MainWindow::updateOriginal(Mat original ){
-//    ui->lblVideofeed->setPixmap(QPixmap::fromImage(cvMatToQImage(original)));
-    ui->lblStatus->setText("Hello world~");
+    ui->lblVideofeed->setPixmap(QPixmap::fromImage(cvMatToQImage(original)));
+    ui->txtStatus->setText("Hello world~");
 }
 
 void MainWindow::updateCropped(Mat cropped){
@@ -225,18 +264,30 @@ void MainWindow::on_btnDown_released(ros::NodeHandle node)
 
 void MainWindow::on_btnResetTracking_clicked(ros::NodeHandle node)
 {
-
+    ui->txtStatus->append("clicked reset tracking");
 }
 
-void MainWindow::on_btnTakeoffOrLand_clicked(ros::NodeHandle node)
+void MainWindow::on_btnTakeoffOrLand_clicked(int i)
 {
-    controls.sendTakeoff(node);
+    ui->txtStatus->append("clicked takeoff " + QString::number(i));
+    if(land){
+//        controls.sendTakeoff(node);
+        land = 0;
+        ui->btnTakeoffOrLand->setText("Land");
+    }else{
+//        controls.sendLand(node);
+        land = 1;
+        ui->btnTakeoffOrLand->setText("Takeoff");
+    }
+    
 }
 
 void MainWindow::on_btnEmergOrRegular_clicked(ros::NodeHandle node)
 {
     controls.sendReset(node);
+    ui->txtStatus->append("Emergency Button clicked");
 }
+
 
 QImage MainWindow::cvMatToQImage( const cv::Mat &inMat )
    {
@@ -284,3 +335,4 @@ QImage MainWindow::cvMatToQImage( const cv::Mat &inMat )
 
       return QImage();
    }
+

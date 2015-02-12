@@ -145,6 +145,7 @@ void ImageConverter::imageCb(const sensor_msgs::ImageConstPtr& msg)
 	try
 	{
 		cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+
 	}
 	catch (cv_bridge::Exception& e)
 	{
@@ -188,41 +189,41 @@ void ImageConverter::imageCb(const sensor_msgs::ImageConstPtr& msg)
 	}
 	FRAME_WIDTH = cv_ptr->image.cols;
 	FRAME_HEIGHT = cv_ptr->image.rows;
-	if (searchImg == false) {
-/*
-} else if (cin.get() == 'w') {
-controls.gainAltitude(1, nh_);
-cout << "Gain altitude" << endl;
-} else if (cin.get() == 's') {
-controls.gainAltitude(-1, nh_);
-cout << "Lose altitude" << endl;
-*/
-//ros::spinOnce();
-//loop_rate.sleep();
-if (numLoops == 0) {
-	controls.pubLand = nh_.advertise<std_msgs::Empty>("/ardrone/land", 1);
-	controls.pubReset = nh_.advertise<std_msgs::Empty>("/ardrone/reset", 1);
-	controls.pubTakeoff = nh_.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
-	controls.pubTwist = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
-}
-ros::Rate loop_rate(100);
-//int quit = 0;
-if (numLoops == 5) {
-	// controls.sendTakeoff(nh_);
-	cout << "TakeOff" << endl;
-	cout << "inFlight: " << controls.inFlight << "\n";
-	cout << "Battery: " << controls.getBattery() << endl;
-} else if ((numLoops > 140) && (controls.getAltitude() < 1.1) && (mouseControlMove == false)) {
-	// controls.gainAltitude(1.1, nh_);
-//cout << "Resetting\tnumLoops: " << numLoops << endl;
-//cout << "inFlight: " << controls.inFlight << "\n";
-	cout << "Altitude: " << controls.getAltitude() << endl;
-} else if ((numLoops >= 140) && (mouseControlMove == false)) {
-//after rising, keep position at 0,0,0
-	controls.setMovement(0, 0, 0);
-	controls.sendMovement(nh_);
-	cout << "Hit 250" << endl;
-}
+if (searchImg == false) {
+	/*
+	} else if (cin.get() == 'w') {
+	controls.gainAltitude(1, nh_);
+	cout << "Gain altitude" << endl;
+	} else if (cin.get() == 's') {
+	controls.gainAltitude(-1, nh_);
+	cout << "Lose altitude" << endl;
+	*/
+	//ros::spinOnce();
+	//loop_rate.sleep();
+	if (numLoops == 0) {
+		controls.pubLand = nh_.advertise<std_msgs::Empty>("/ardrone/land", 1);
+		controls.pubReset = nh_.advertise<std_msgs::Empty>("/ardrone/reset", 1);
+		controls.pubTakeoff = nh_.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
+		controls.pubTwist = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+	}
+	ros::Rate loop_rate(100);
+	//int quit = 0;
+	if (numLoops == 5) {
+		// controls.sendTakeoff(nh_);
+		cout << "TakeOff" << endl;
+		cout << "inFlight: " << controls.inFlight << "\n";
+		cout << "Battery: " << controls.getBattery() << endl;
+	} else if ((numLoops > 140) && (controls.getAltitude() < 1.1) && (mouseControlMove == false)) {
+		// controls.gainAltitude(1.1, nh_);
+	//cout << "Resetting\tnumLoops: " << numLoops << endl;
+	//cout << "inFlight: " << controls.inFlight << "\n";
+		cout << "Altitude: " << controls.getAltitude() << endl;
+	} else if ((numLoops >= 140) && (mouseControlMove == false)) {
+	//after rising, keep position at 0,0,0
+		controls.setMovement(0, 0, 0);
+		controls.sendMovement(nh_);
+		cout << "Hit 250" << endl;
+	}
 }
 numLoops = numLoops + 1;
 if (numLoops > 2000) {
@@ -327,7 +328,7 @@ if ((!(croppedCamera.empty())) && (croppedImage.cols < cv_ptr->image.cols) && (c
 }
 if (useFullCamera == true) {
 	minMaxLoc(resultMovingFull, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
-} else {
+}else {
 	minMaxLoc(resultMoving, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
 }
 useFullCamera = false;
@@ -573,6 +574,13 @@ void ImageConverter::setMouseLeftRelease(int x2, int y2) {
 	freezeFrame = false;
 }
 Mat ImageConverter::getCameraFeed() {
+	int x1, x2, y1, y2;
+	x1 = 50; y1 = 50;
+	x2 = 150; y2 = 100;
+	if (useFullCamera == false) {
+	rectangle(cv_ptr->image, Point(x1, y1), Point(x2, y2), Scalar(0, 255, 0), 2, 8, 0);
+	line(cv_ptr->image, Point(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2), Point(FRAME_WIDTH / 2,(FRAME_HEIGHT) / 2), Scalar(0, 255, 0), 3, 1, 0);
+	}
 	return cv_ptr->image;
 }
 Mat ImageConverter::getMatchingResults() {

@@ -34,6 +34,8 @@ public:
 
 public slots: 
 
+    void qtCallBack(const sensor_msgs::ImageConstPtr& msg);
+
     void updateGUI(ImageConverter ic);
 
     void updateOriginal(Mat original );
@@ -41,9 +43,12 @@ public slots:
     void updateCropped(Mat cropped);
 
     void updateResultMatching(Mat resultMatching);
+
     QImage cvMatToQImage( const cv::Mat &inMat );
 
 private slots:
+
+    void testTimer();
 
     void on_btnForward_pressed(ros::NodeHandle);
 
@@ -81,7 +86,7 @@ private slots:
 
     void on_btnResetTracking_clicked(ros::NodeHandle);
 
-    void on_btnTakeoffOrLand_clicked(ros::NodeHandle);
+    void on_btnTakeoffOrLand_clicked(int i);
 
     void on_btnEmergOrRegular_clicked(ros::NodeHandle);
 
@@ -91,6 +96,9 @@ private:
  //   ros::NodeHandle node;
     controller controls;
 //    ImageConverter ic;
+
+    bool land; // flag of landing
+    int count; // used for test timer, no other purpose
 
     Mat MatOriginal;
     Mat MatCropped;
@@ -103,6 +111,9 @@ private:
  //   QLabel lblStatus;
 
     QTimer* tmrTimer;
+
+    cv_bridge::CvImagePtr cv_ptr;
+//    image_transport::Subscriber image_sub_;
 
 
 
