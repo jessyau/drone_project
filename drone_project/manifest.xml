@@ -1,0 +1,8 @@
+<package>
+  <description>The drone_project package</description>
+
+  <license>BSD</license>
+
+  <depend package="ardrone_autonomy" />
+  
+</package>
