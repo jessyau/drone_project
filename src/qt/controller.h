@@ -17,10 +17,18 @@
 
 using namespace std;
 
+static bool initialized = false;
+static struct termios initial_settings;
+static double test_flight_time = 10.0;
+
 class controller
 {
 public:
 	controller(){}
+	bool linebufferedController(bool on = true);
+	bool echoController(bool on = true);
+	bool iskeypressed(unsigned timeout_ms = 0);
+
 	void Init(string a, int b , int argc, char** argv);
 	string key;
 	int inFlight;
@@ -37,17 +45,32 @@ public:
 	void autoMode(ros::NodeHandle);
 	void testMove(ros::Rate, ros::NodeHandle);
 	void gainAltitude(double, ros::NodeHandle);
-	void nav_callback(const ardrone_autonomy::Navdata&);
+/*	void nav_callback(const ardrone_autonomy::Navdata& msg_in){
+	battery = msg_in.batteryPercent;
+	//cout << "Getting battery life" << endl;
+	altitude = msg_in.altd*0.001; //mm to m
+	vx = msg_in.vx*0.001; // From mm/s to m/s
+	vy = msg_in.vy*0.001;
+}*/
 	void proportional(double, double, double, double);
 	void hover(ros::NodeHandle);
 	double getBattery();
 	double getAltitude();
 	geometry_msgs::Twist getTwist();
+
+
 private:
 	geometry_msgs::Twist twist_msg;
 	std_msgs::Empty emp_msg;
 	string command;
 };
 
-
+void nav_callback(const ardrone_autonomy::Navdata& msg_in);
+/*{
+	battery = msg_in.batteryPercent;
+	//cout << "Getting battery life" << endl;
+	altitude = msg_in.altd*0.001; //mm to m
+	vx = msg_in.vx*0.001; // From mm/s to m/s
+	vy = msg_in.vy*0.001;
+}*/
 #endif // CONTROLLER_H

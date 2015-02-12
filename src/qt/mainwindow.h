@@ -10,6 +10,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "controller.h"
+#include "../image_converter.h"
 
 using namespace cv;
 
@@ -33,13 +34,14 @@ public:
 
 public slots: 
 
-    void updateGUI();
+    void updateGUI(ImageConverter ic);
 
     void updateOriginal(Mat original );
 
     void updateCropped(Mat cropped);
 
     void updateResultMatching(Mat resultMatching);
+    QImage cvMatToQImage( const cv::Mat &inMat );
 
 private slots:
 
@@ -86,8 +88,9 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
-    ros::NodeHandle node;
+ //   ros::NodeHandle node;
     controller controls;
+//    ImageConverter ic;
 
     Mat MatOriginal;
     Mat MatCropped;

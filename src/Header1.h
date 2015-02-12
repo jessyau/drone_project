@@ -14,6 +14,12 @@
 #include <highgui.h>
 #include <math.h>
 #include <ardrone_autonomy/Navdata.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <termios.h>
 extern bool multiplyTwoNumbers(int test1, int test2);
 extern bool initialize();
 extern void sendTakeoff(ros::NodeHandle node);

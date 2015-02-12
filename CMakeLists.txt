@@ -41,7 +41,7 @@ find_package(Qt5Gui)
 #target_link_libraries(controller ${catkin_LIBRARIES})
 
 # The UI Frame
-add_executable(UI src/qt/main.cpp src/qt/mainwindow.cpp src/qt/mainwindow.h src/qt/mainwindow.ui)
+add_executable(UI src/qt/main.cpp src/qt/mainwindow.cpp src/qt/widget.cpp src/qt/mainwindow.h src/qt/widget.h src/qt/mainwindow.ui)
 target_link_libraries(UI Qt5::Widgets Qt5::Gui Qt5::Core ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 
 catkin_package(INCLUDE_DIRS include LIBRARIES drone_project)

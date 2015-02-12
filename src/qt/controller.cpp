@@ -14,17 +14,20 @@
 #include "controller.h"
 
 using namespace std;
-static bool initialized = false;
-static struct termios initial_settings;
+
+
+
+// static bool initialized = false;
+// static struct termios initial_settings;
+
 double start_time;
-double test_flight_time = 10.0;
 double battery;
 double altitude;
 double vx;
 double vy;
 double vz;
 
-bool linebuffered(bool on = true)
+bool controller::linebufferedController(bool on)
 {
 	struct termios settings;
 	if (!initialized) return false;
@@ -37,7 +40,7 @@ bool linebuffered(bool on = true)
 	return true;
 }
 //---------------------------------------------------------------------------
-bool echo(bool on = true)
+bool controller::echoController(bool on)
 {
 	struct termios settings;
 	if (!initialized) return false;
@@ -48,7 +51,7 @@ bool echo(bool on = true)
 }
 //---------------------------------------------------------------------------
 #define INFINITE (-1)
-bool iskeypressed(unsigned timeout_ms = 0)
+bool controller::iskeypressed(unsigned timeout_ms)
 {
 	if (!initialized) return false;
 	struct pollfd pls[1];
@@ -56,43 +59,7 @@ bool iskeypressed(unsigned timeout_ms = 0)
 	pls[0].events = POLLIN | POLLPRI;
 	return poll(pls, 1, timeout_ms) > 0;
 }
-//---------------------------------------------------------------------------
-	// class controller
-	// {
-	// public:
-	// 	controller(){}
-	// 	void Init(string a, int b , int argc, char** argv)
-	// 	{
-	// 		ros::init(argc, argv, "controller");
-	// 		command = a;
-	// 		inFlight = b;
-	// 	}
-	// 	string key;
-	// 	int inFlight;
-	// 	ros::Publisher pubLand, pubTakeoff, pubReset, pubTwist, pubGetNav;
-	// 	ros::Subscriber nav_sub;
-	// 	void getKey();
-	// 	void sendTakeoff(ros::NodeHandle);
-	// 	void sendLand(ros::NodeHandle);
-	// 	void sendReset(ros::NodeHandle);
-	// 	void setMovement(double, double, double);
-	// 	void setTurn(double);
-	// 	void resetTwist();
-	// 	void sendMovement(ros::NodeHandle);
-	// 	void autoMode(ros::NodeHandle);
-	// 	void testMove(ros::Rate, ros::NodeHandle);
-	// 	void gainAltitude(double, ros::NodeHandle);
-	// 	void nav_callback(const ardrone_autonomy::Navdata&);
-	// 	void proportional(double, double, double, double);
-	// 	void hover(ros::NodeHandle);
-	// 	double getBattery();
-	// 	double getAltitude();
-	// 	geometry_msgs::Twist getTwist();
-	// private:
-	// 	geometry_msgs::Twist twist_msg;
-	// 	std_msgs::Empty emp_msg;
-	// 	string command;
-	// };
+
 /*Initializes the controller object
 controller(string a, int b, int argc, char** argv)
 {
@@ -107,14 +74,14 @@ inFlight = b;
 void nav_callback(const ardrone_autonomy::Navdata& msg_in)
 {
 	battery = msg_in.batteryPercent;
-//cout << "Getting battery life" << endl;
-altitude = msg_in.altd*0.001; //mm to m
-vx = msg_in.vx*0.001; // From mm/s to m/s
-vy = msg_in.vy*0.001;
+	//cout << "Getting battery life" << endl;
+	altitude = msg_in.altd*0.001; //mm to m
+	vx = msg_in.vx*0.001; // From mm/s to m/s
+	vy = msg_in.vy*0.001;
 }
 
 
-	void controller::Init(string a, int b , int argc, char** argv)
+void controller::Init(string a, int b , int argc, char** argv)
 	{
 //		ros::init(argc, argv, "controller");
 		command = a;
@@ -152,8 +119,8 @@ void controller::gainAltitude(double alt_des, ros::NodeHandle node)
 	controller::proportional(0, 0, 2.5, 0.75);
 //controller::setMovement(0, 0, 0.75 * 10);
 	controller::sendMovement(node);
-	controller::resetTwist();
-	controller::sendMovement(node);
+//	controller::resetTwist();
+//	controller::sendMovement(node);
 }
 //Publishes commands for drone to take off
 void controller::sendTakeoff(ros::NodeHandle node)
@@ -224,8 +191,8 @@ void controller::testMove(ros::Rate loop_rate, ros::NodeHandle node)
 	}
 	start_time = (double)ros::Time::now().toSec();
 	cout << "Started Time: " << start_time << "\n" << endl;
-	linebuffered(false);
-	echo(false);
+	controller::linebufferedController(false);
+	controller::echoController(false);
 	while ((double)ros::Time::now().toSec() < start_time + test_flight_time)
 	{
 		if ((double)ros::Time::now().toSec() < start_time + test_flight_time / 2)
@@ -245,8 +212,8 @@ void controller::testMove(ros::Rate loop_rate, ros::NodeHandle node)
 	controller::resetTwist();
 	controller::sendMovement(node);
 	controller::sendLand(node);
-	echo();
-	linebuffered();
+	controller::echoController();
+	controller::linebufferedController();
 }
 void StartMenu()
 {

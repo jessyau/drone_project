@@ -20,12 +20,19 @@
 #include <termios.h>
 #include <poll.h>
 #include <ardrone_autonomy/Navdata.h>
-#include "controller.cpp"
+
+
 
 #include "widget.h"
 
+#include "../image_converter.cpp"
+//#include "controller.h"
+#include "controller.cpp"
+
 using namespace cv;
 using namespace std;
+
+
 
 MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
     QMainWindow(parent),
@@ -36,17 +43,31 @@ MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
 //    ros::init(argc, argv, "controller");
     controls.Init("-1", 0, argc, argv);
     ros::NodeHandle node;
+    
+    
+    if (!initialize())
+    {
+       return ;
+    }
+
+    ImageConverter ic(node);
+    ros::spin();
+
+    ui->lblVideofeed->setPixmap(QPixmap::fromImage(cvMatToQImage(ic.getCameraFeed())));
+    /*
     controls.pubLand = node.advertise<std_msgs::Empty>("/ardrone/land", 1);
     controls.pubReset = node.advertise<std_msgs::Empty>("/ardrone/reset", 1);
     controls.pubTakeoff = node.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
     controls.pubTwist = node.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+    */
 
 
 
+ //   ui->lblVideofeed->setText("Battery is :"+ QString::number(controls.getBattery()));
 
-    ui->lblVideofeed->setText("Battery is :"+ QString::number(controls.getBattery()));
-
-
+    tmrTimer = new QTimer(this);
+    connect(tmrTimer, SIGNAL(timeout()), this, SLOT(updateGUI(ImageConverter ic)));
+    tmrTimer->start(20);
 
     /******
      * This is how to put a image into a label using cv::Mat and QImage
@@ -67,6 +88,23 @@ MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::updateGUI(ImageConverter ic){
+    updateOriginal(ic.getCameraFeed());
+}
+
+void MainWindow::updateOriginal(Mat original ){
+//    ui->lblVideofeed->setPixmap(QPixmap::fromImage(cvMatToQImage(original)));
+    ui->lblStatus->setText("Hello world~");
+}
+
+void MainWindow::updateCropped(Mat cropped){
+
+}
+
+void MainWindow::updateResultMatching(Mat resultMatching){
+
 }
 
 
@@ -200,18 +238,49 @@ void MainWindow::on_btnEmergOrRegular_clicked(ros::NodeHandle node)
     controls.sendReset(node);
 }
 
-void MainWindow::updateGUI(){
+QImage MainWindow::cvMatToQImage( const cv::Mat &inMat )
+   {
+      switch ( inMat.type() )
+      {
+         // 8-bit, 4 channel
+         case CV_8UC4:
+         {
+            QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_RGB32 );
 
-}
+            return image;
+         }
 
-void MainWindow::updateOriginal(Mat original ){
+         // 8-bit, 3 channel
+         case CV_8UC3:
+         {
+            QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_RGB888 );
 
-}
+            return image.rgbSwapped();
+         }
 
-void MainWindow::updateCropped(Mat cropped){
+         // 8-bit, 1 channel
+         case CV_8UC1:
+         {
+            static QVector<QRgb>  sColorTable;
 
-}
+            // only create our color table once
+            if ( sColorTable.isEmpty() )
+            {
+               for ( int i = 0; i < 256; ++i )
+                  sColorTable.push_back( qRgb( i, i, i ) );
+            }
 
-void MainWindow::updateResultMatching(Mat resultMatching){
+            QImage image( inMat.data, inMat.cols, inMat.rows, inMat.step, QImage::Format_Indexed8 );
 
-}
+            image.setColorTable( sColorTable );
+
+            return image;
+         }
+
+         default:
+            qWarning() << "ASM::cvMatToQImage() - cv::Mat image type not handled in switch:" << inMat.type();
+            break;
+      }
+
+      return QImage();
+   }

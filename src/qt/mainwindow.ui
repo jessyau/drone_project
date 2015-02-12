@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0" rowspan="3" colspan="2">
-     <widget class="widget" name="lblVideofeed">
+     <widget class="Widget" name="lblVideofeed">
       <property name="minimumSize">
        <size>
         <width>400</width>
@@ -36,7 +36,7 @@
      </widget>
     </item>
     <item row="1" column="2">
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="txtStatus">
       <property name="maximumSize">
        <size>
         <width>400</width>
