@@ -1,5 +1,3 @@
-#include "mainwindow.h"
-#include <QApplication>
 
 #include <ros/ros.h>
 #include <sstream>
@@ -15,17 +13,15 @@
 #include <poll.h>
 #include <ardrone_autonomy/Navdata.h>
 
-#include "controller.h"
+#include "controller.cpp"
 
 
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    
 	ros::init(argc, argv, "controller");
 	controller controls;
-	if (!initialize()){  return 0;}
+//	if (!initialize()){  return 0;}
 	controls.Init("-1", 0, argc, argv);
 	ros::NodeHandle node;
 	controls.pubLand = node.advertise<std_msgs::Empty>("/ardrone/land", 1);
@@ -35,28 +31,33 @@ int main(int argc, char *argv[])
 
     controls.nav_sub = node.subscribe("/ardrone/navdata", 1, &(nav_callback));
 
+
     ros::spinOnce();
     sleep(1);
     ros::spinOnce();
     
+    
+    std::cout << "Battery: " << controls.getBattery() << "   bump " << "\n";
+
+    sleep(5);
+    controls.sendReset(node);
+
+    sleep(5);
+    controls.sendReset(node);
 
 
-    std::cout << "Battery" << controls.getBattery() << " bump " << "\n";
-    MainWindow w(controls.getBattery(), argv);
-     w.show();
-    int i = 0;
-    while(i < 5){
-        sleep(2);
-        controls.sendReset(node);
+sleep(5);
+    controls.sendReset(node);
 
-        i++;
-    }
 
-     
+sleep(5);
+    controls.sendReset(node);
+
+
+sleep(5);
+    controls.sendReset(node);
 
     ros::shutdown();
  //   ros::spin();
     exit(0);
-
-    return a.exec();
 }

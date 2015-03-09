@@ -62,7 +62,7 @@ public:
 	controller(){}
 	void Init(string a, int b , int argc, char** argv)
 	{
-		ros::init(argc, argv, "controller");
+//		ros::init(argc, argv, "controller");
 		command = a;
 		inFlight = b;
 	}
@@ -92,14 +92,7 @@ private:
 	std_msgs::Empty emp_msg;
 	string command;
 };
-/*Initializes the controller object
-controller(string a, int b, int argc, char** argv)
-{
-ros::init(argc, argv, "controller");
-command = a;
-inFlight = b;
-}pubTakeoff
-*/
+
 void nav_callback(const ardrone_autonomy::Navdata& msg_in)
 {
 	battery = msg_in.batteryPercent;
@@ -267,7 +260,7 @@ void finalize()
 		tcsetattr(STDIN_FILENO, TCSANOW, &initial_settings);
 }
 //---------------------------------------------------------------------------
-
+/*
 int main(int argc, char** argv)
 {
 	controller controls;
@@ -275,18 +268,7 @@ int main(int argc, char** argv)
 	{
 		return 1;
 	}
-// try {
-// linebuffered( false );
-// echo( false );
-// while (true)
-// {
-// cout << "Zzz..." << flush;
-// if (iskeypressed( 500 ) && cin.get() == '\n') break;
-// }
-// echo();
-// linebuffered();
-// }
-// catch (...) { }
+
 	controls.Init("-1", 0, argc, argv);
 	ros::NodeHandle node;
 	controls.pubLand = node.advertise<std_msgs::Empty>("/ardrone/land", 1);
@@ -297,50 +279,9 @@ int main(int argc, char** argv)
 //int quit = 0;
 	StartMenu();
 
-/*
-while (true)
-{
-controls.getKey();
-if (controls.key.compare("t") == 0)
-{
-controls.sendTakeoff(node);
-cout << "Sent Takeoff\n";
-cout << "inFlight: " << controls.inFlight << "\n";
-}
-else if (controls.key.compare("l") == 0)
-{
-controls.sendLand(node);
-cout << "Sent Land\n";
-cout << "inFlight: " << controls.inFlight << "\n";
-}
-else if (controls.key.compare("r") == 0)
-{
-controls.sendReset(node);
-cout << "Sent Reset\n";
-}
-else if (controls.key.compare("a") == 0)
-{
-cout << "Starting AutoMode\nPress Enter to quit autoMode\n";
-controls.autoMode(node);
-}
-else if (controls.key.compare("s") == 0)
-{
-cout << "Starting Test Flight\nPress Enter to quit Test Flight\n";
-controls.testMove(loop_rate, node);
-}
-else if (controls.key.compare("q") == 0)
-{
-cout<<"Exiting\n";
-break;
-}
-else
-cout << "Try again.";
-}
-
-*/
-
 finalize();
 ROS_INFO("Closing Node");
 exit(0);
 }
 
+*/
