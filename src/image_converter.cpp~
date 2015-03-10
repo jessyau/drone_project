@@ -424,7 +424,7 @@ public:
 				//cout << "Lost!!!!!" << endl;
 
 			}
-			cout << "Num times lost: " << numTimesLost << endl;
+
 
 			if (lost == true) {
 				
@@ -448,16 +448,11 @@ public:
 
 				totalConfidTracking = totalConfidTracking + confidPercent;
 				numLoopTracking = numLoopTracking + 1;
-				
-				cout << "Confid Tracking: " << totalConfidTracking << "\tTracking Loops: " << numLoopTracking 						<< endl;
-
 			}
 			else {
 
 				totalConfidLost = totalConfidLost + confidPercent;
 				numLoopLost = numLoopLost + 1;
-
-				cout << "Confid Lost: " << totalConfidLost << "\tLost Loops: " << numLoopLost 						<< endl;
 
 				int width = croppedImage.cols + shiftCropped * 2;
 				int height = croppedImage.rows + shiftCropped * 2;
@@ -520,7 +515,6 @@ public:
 					
 				}
 			}
-
 
 
 			if (useFullCamera == true) {
