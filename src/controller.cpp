@@ -187,14 +187,11 @@ void controller::gainAltitude(double alt_des, ros::NodeHandle node)
 		controller::resetTwist();
 		cout << "reset values in gainAltitude, altitude: " << altitude << endl;
 	} else {
-		controller::proportional(0, 0, 1, 0.75);
+		controller::proportional(0, 0, 1, 0.6);
 		cout << "Running proportional" << endl;
 	}
 	
 	controller::sendMovement(node);
-
-	//controller::resetTwist();
-	//controller::sendMovement(node);
 }
 
 //Publishes commands for drone to take off
