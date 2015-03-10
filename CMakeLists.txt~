@@ -41,11 +41,11 @@ catkin_package()
 #target_link_libraries(controller ${catkin_LIBRARIES})
 
 # The UI Frame
-add_executable(UI src/qt/main.cpp src/qt/mainwindow.cpp src/qt/widget.cpp src/qt/controller.h src/image_converter.h src/qt/mainwindow.h src/qt/widget.h src/qt/mainwindow.ui)
-target_link_libraries(UI Qt5::Widgets Qt5::Gui Qt5::Core ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+#add_executable(UI src/qt/main.cpp src/qt/mainwindow.cpp src/qt/widget.cpp src/qt/controller.h src/image_converter.h src/qt/mainwindow.h src/qt/widget.h src/qt/mainwindow.ui)
+#target_link_libraries(UI Qt5::Widgets Qt5::Gui Qt5::Core ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 
-add_executable(testQ src/qt/mainTestController.cpp)
-target_link_libraries(testQ ${catkin_LIBRARIES})
+add_executable(icOrigin src/image_converter_origin.cpp)
+target_link_libraries(icOrigin ${catkin_LIBRARIES})
 
 catkin_package(INCLUDE_DIRS include LIBRARIES drone_project)
 
