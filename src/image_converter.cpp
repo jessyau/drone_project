@@ -287,13 +287,14 @@ class ImageConverter
 				cout << "TakeOff" << endl;
 				cout << "inFlight: " << controls.inFlight << "\n";
 				cout << "Battery: " << controls.getBattery() << endl;
-			} else if ((numLoops > 140) && (controls.getAltitude() < 1.1) && (mouseControlMove == false)) {
+			} else if ((numLoops > 200) && (controls.getAltitude() < 2.0) && (mouseControlMove == false)) {
 				// controls.setMovement(0, 0, 0);
 				// controls.sendMovement(nh_);
 
-				controls.gainAltitude(1.2, nh_); 
+				controls.gainAltitude(2.0, nh_); 
+				cout << "Twist:" << controls.getTwist().linear.x << ", " << controls.getTwist().linear.y << "\n";
 				cout << "Altitude: " << controls.getAltitude() << endl;
-			} else if ((numLoops >= 140) && (mouseControlMove == false)) {
+			} else if ((numLoops >= 200) && (mouseControlMove == false)) {
 				//after rising, keep position at 0,0,0
 				controls.setMovement(0, 0, 0);
 				controls.sendMovement(nh_);
