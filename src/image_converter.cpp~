@@ -372,12 +372,6 @@ class ImageConverter
 
 				} 
 				else {
-
-					totalConfidLost = totalConfidLost + confidPercent;
-					numLoopLost = numLoopLost + 1;
-
-					cout << "Confid Lost: " << totalConfidLost << "\tLost Loops: " << numLoopLost << endl;
-
 					int width = croppedImage.cols + shiftCropped * 2;
 					int height = croppedImage.rows + shiftCropped * 2;
 
