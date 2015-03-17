@@ -1,5 +1,5 @@
-#include "Header1.h"
-#include "controller.cpp"
+#include "controller.h"
+#include "image_converter.h"
 
 using namespace std;
 using namespace cv;
@@ -103,14 +103,10 @@ int moveRight = 0;
 
 bool mouseControlMove = false;
 
-double totalConfidTracking = 0;
-double totalConfidLost = 0;
-int numLoopLost = 0;
-int numLoopTracking = 0;
-int numTimesLost = 0;
 
 //This function uses the mouse clicks to setup the search image
-void CallBackFunc(int event, int x, int y, int flags, void* param) {
+void CallBackFunc(int event, int x, int y, int flags, void* param) 
+{
 
 	//Where the mouses' left button is clicked store the x, and y points into the rectangle 	variables
 	if ((event == EVENT_LBUTTONDOWN) && (mouseControlMove == false)) {
@@ -171,42 +167,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* param) {
 	}
 }
 
-
-class ImageConverter
-{
-	ros::NodeHandle nh_;
-	image_transport::ImageTransport it_;
-	image_transport::Subscriber image_sub_;
-	image_transport::Publisher image_pub_;
-  
-	public:
-	
-	void setMouseLeftClickDown(int Rectanglex1, int Rectangley1);
-	void setMouseLeftRelease(int Rectanglex2, int Rectangley2);
-	void setLost(bool lostSetTo);
-
-
-	Mat getCroppedImage();
-	Mat getCameraFeed();
-	Mat getMatchingResults();
-
-	ImageConverter(ros::NodeHandle node)
-	  : nh_(node), it_(nh_)
-	{
-	    // Subscrive to input video feed and publish output video feed
-	  image_sub_ = it_.subscribe("/ardrone/image_raw", 1, 
-	    &ImageConverter::imageCb, this);
-	  image_pub_ = it_.advertise("/image_converter/output_video", 1);
-
-	  cv::namedWindow("Drone Camera");
-	}
-
-	~ImageConverter()
-	{
-	  cv::destroyWindow("Drone Camera");
-	}
-
-	void imageCb(const sensor_msgs::ImageConstPtr& msg)
+void ImageConverter::imageCb(const sensor_msgs::ImageConstPtr& msg)
 	{
 		/// Localizing the best match with minMaxLoc
 		double minValMoving; double maxValMoving; Point minLocMoving; Point maxLocMoving;
@@ -238,8 +199,8 @@ class ImageConverter
 			cout << "Toggled control with mouse, results: " << mouseControlMove << endl;
 		}
 
-		echoController();
-		linebufferedController();
+		echoController(true);
+		linebufferedController(true);
 
 		if (mouseControlMove == true) {
 			if (moveForward > 0) {
@@ -281,22 +242,22 @@ class ImageConverter
 			// 	controls.pubTwist = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 			// }
 			ros::Rate loop_rate(100);
-			if(numLoops == 5) {
+			if (numLoops == 1) {
 				controls.resetTwist();
-				cout << "Reset Twist" << endl;
+
 			} else if (numLoops == 10) {
 				controls.sendTakeoff(nh_);
 				cout << "TakeOff" << endl;
-				cout << "inFlight: " << controls.inFlight << "\n";
+				// cout << "inFlight: " << controls.inFlight << "\n";
+				cout << "Test" << endl;
 				cout << "Battery: " << controls.getBattery() << endl;
-			} else if ((numLoops > 100) && (controls.getAltitude() < 2.0) && (mouseControlMove == false)) {
+			} else if ((numLoops > 140) && (controls.getAltitude() < 1.1) && (mouseControlMove == false)) {
 				// controls.setMovement(0, 0, 0);
 				// controls.sendMovement(nh_);
 
-				controls.gainAltitude(2.0, nh_); 
-				cout << "Twist:" << controls.getTwist().linear.x << ", " << controls.getTwist().linear.y << "\n";
+				controls.gainAltitude(1.2, nh_); 
 				cout << "Altitude: " << controls.getAltitude() << endl;
-			} else if ((numLoops >= 200) && (mouseControlMove == false)) {
+			} else if ((numLoops >= 140) && (mouseControlMove == false)) {
 				//after rising, keep position at 0,0,0
 				controls.setMovement(0, 0, 0);
 				controls.sendMovement(nh_);
@@ -366,21 +327,8 @@ class ImageConverter
 						matchTemplate(cv_ptr->image, croppedImage, resultMovingFull, CV_TM_CCOEFF_NORMED);
 						useFullCamera = true;
 					}
-
-				totalConfidTracking = totalConfidTracking + confidPercent;
-				numLoopTracking = numLoopTracking + 1;
-				
-				cout << "Confid Tracking: " << totalConfidTracking << "\tTracking Loops: " << numLoopTracking << endl;
-
-
 				} 
 				else {
-
-					totalConfidLost = totalConfidLost + confidPercent;
-					numLoopLost = numLoopLost + 1;
-
-					cout << "Confid Lost: " << totalConfidLost << "\tLost Loops: " << numLoopLost << endl;
-
 					int width = croppedImage.cols + shiftCropped * 2;
 					int height = croppedImage.rows + shiftCropped * 2;
 
@@ -584,7 +532,7 @@ class ImageConverter
 					cout << "Close to the center: zeroing velocities" << endl;
 				}
 
-				if (confidPercent > 0.7) {
+				if (confidPercent > 0.5) {
 					if (mouseControlMove == false) {
 						controls.setMovement(xVelocity, yVelocity, 0);
 						controls.sendMovement(nh_);
@@ -693,7 +641,6 @@ class ImageConverter
 			posCroppedCameraY = prePosCroppedCameraY;
 		}
 	}
-};
 
 void ImageConverter::setMouseLeftClickDown(int x1, int y1) {
 	cout << "Mouse Down (" << x1 << ", " << y1 << ")" << endl;
@@ -724,7 +671,7 @@ Mat ImageConverter::getMatchingResults() {
 void ImageConverter::setLost(bool lostSetTo) {
 	lost = lostSetTo;
 }
-
+/*
 int main(int argc2, char** argv2)
 {
 	int keyPressed;
@@ -752,4 +699,4 @@ int main(int argc2, char** argv2)
 	return 0;
 
 }
-
+*/

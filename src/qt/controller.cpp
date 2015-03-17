@@ -135,8 +135,8 @@ geometry_msgs::Twist controller::getTwist()
 }
 void controller::proportional(double vx_des, double vy_des, double vz_des, double K)
 {
-	twist_msg.linear.x=vx+K*(vx_des-vx); //{-1 to 1}=K*( m/s - m/s)
-	twist_msg.linear.y=vy+K*(vy_des-vy);
+	// twist_msg.linear.x=vx+K*(vx_des-vx); //{-1 to 1}=K*( m/s - m/s)
+	// twist_msg.linear.y=vy+K*(vy_des-vy);
 	twist_msg.linear.z=vz+K*(vz_des-vz);
 }
 //Gets input for commands in the menu mode
