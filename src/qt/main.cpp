@@ -24,39 +24,28 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     
 	ros::init(argc, argv, "controller");
+    ros::NodeHandle node;
+
 	controller controls;
 	if (!initialize()){  return 0;}
 	controls.Init("-1", 0, argc, argv);
-	ros::NodeHandle node;
-	controls.pubLand = node.advertise<std_msgs::Empty>("/ardrone/land", 1);
-	controls.pubReset = node.advertise<std_msgs::Empty>("/ardrone/reset", 1);
-	controls.pubTakeoff = node.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
-	controls.pubTwist = node.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
+	
 
-    controls.nav_sub = node.subscribe("/ardrone/navdata", 1, &(nav_callback));
-
-    ros::spinOnce();
-    sleep(1);
-    ros::spinOnce();
+//    sleep(1);
+//    ros::spinOnce();
     
 
 
-    std::cout << "Battery" << controls.getBattery() << " bump " << "\n";
-    MainWindow w(controls.getBattery(), argv);
+    
+    MainWindow w(controls, node);
      w.show();
-    int i = 0;
-    while(i < 5){
-        sleep(2);
-        controls.sendReset(node);
 
-        i++;
-    }
 
      
 
     ros::shutdown();
  //   ros::spin();
-    exit(0);
-
+//    exit(0);
+//    a.connect(&a, SIGNAL(lastWindowClosed()), &a, SLOT(quit()));
     return a.exec();
 }

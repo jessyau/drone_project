@@ -27,16 +27,18 @@
 
 #include "widget.h"
 
-#include "../image_converter.cpp"
+#include "image_converter.h"
 //#include "controller.h"
-#include "controller.cpp"
+#include "controller.h"
 
 using namespace cv;
 using namespace std;
 
 
 
-MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
+MainWindow::MainWindow(controller control, ros::NodeHandle node, QWidget *parent) :
+    controls(control),
+    qnode(node),
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -44,21 +46,20 @@ MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
     land = 1;
     count = 0;
  //   tmrTimer = new QTimer(this);
-    
- 
-    
-//    ros::init(argc, argv, "controller");
-//    controls.Init("-1", 0, argc, argv);
+        controls.pubLand = node.advertise<std_msgs::Empty>("/ardrone/land", 1);
+    controls.pubReset = node.advertise<std_msgs::Empty>("/ardrone/reset", 1);
+    controls.pubTakeoff = node.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
+    controls.pubTwist = node.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 
-//    ros::NodeHandle node;
-//    controls.nav_sub = node.subscribe("/ardrone/navdata", 1, &(nav_callback));
+    controls.nav_sub = node.subscribe("/ardrone/navdata", 1, &(nav_callback));
 
- //   if (!initialize()){  return ;}
-    ui->lblStatus->setText("Battery: " + QString::number(argc) + ". Altitude: " + QString::number(150));
+    ros::spinOnce();
+    
+
 //    ImageConverter ic(node);
  //  ros::spinOnce();
     
- //   ros::Rate loop_rate(100);
+
 //    MatOriginal = ic.getCameraFeed();
 /*    image_transport::Subscriber image_sub_;
     image_transport::ImageTransport it_(node);
@@ -72,12 +73,18 @@ MainWindow::MainWindow(int argc, char* argv[], QWidget *parent) :
     controls.pubTwist = node.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
  */   
 
+    int i = 0;
+    while(i < 5){
+        sleep(0.5);
+        controls.sendReset(node);
 
+        i++;
+    }
 
  //   ui->lblVideofeed->setText("Battery is :"+ QString::number(controls.getBattery()));
-
+    ui->lblStatus->setText("Battery: " + QString::number(controls.getBattery()) + ". Altitude: " + QString::number(controls.getAltitude()));
     
-
+std::cout << "Battery" << controls.getBattery() << " bump " << "\n";
  /******
      * This is how to put a image into a label using cv::Mat and QImage
     Mat inMat;
@@ -104,6 +111,12 @@ MainWindow::~MainWindow()
     ros::shutdown();
     delete ui;
 }
+
+void MainWindow::Init(ros::NodeHandle qnode)
+{
+
+}
+
 
 //timer works fine. this function is used for testing buttons -- all test works fine
 void MainWindow::testTimer(){
@@ -148,7 +161,7 @@ void MainWindow::updateResultMatching(Mat resultMatching){
 
 
 // calling control functions that twist the drone to the left
-
+/*
 void MainWindow::on_btnForward_pressed(ros::NodeHandle node)
 {
     controls.setMovement(1,0,0);
@@ -158,7 +171,7 @@ void MainWindow::on_btnForward_pressed(ros::NodeHandle node)
 
 void MainWindow::on_btnForward_released(ros::NodeHandle node)
 {
-    controls.hover(node);
+    controls.Hover(node);
     ros::spinOnce();
 }
 
@@ -287,7 +300,7 @@ void MainWindow::on_btnEmergOrRegular_clicked(ros::NodeHandle node)
     controls.sendReset(node);
     ui->txtStatus->append("Emergency Button clicked");
 }
-
+*/
 
 QImage MainWindow::cvMatToQImage( const cv::Mat &inMat )
    {

@@ -9,8 +9,10 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include <ros/ros.h>
+
 #include "controller.h"
-#include "../image_converter.h"
+#include "image_converter.h"
 
 using namespace cv;
 
@@ -29,7 +31,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(int argc, char **argv, QWidget *parent = 0);
+    explicit MainWindow(controller control, ros::NodeHandle node, QWidget *parent = 0);
     ~MainWindow();
 
 public slots: 
@@ -49,8 +51,9 @@ public slots:
 private slots:
 
     void testTimer();
+    void Init(ros::NodeHandle qnode);
 
-    void on_btnForward_pressed(ros::NodeHandle);
+/*    void on_btnForward_pressed(ros::NodeHandle);
 
     void on_btnForward_released(ros::NodeHandle);
 
@@ -89,12 +92,13 @@ private slots:
     void on_btnTakeoffOrLand_clicked(int i);
 
     void on_btnEmergOrRegular_clicked(ros::NodeHandle);
-
+*/
 private:
     Ui::MainWindow *ui;
 
  //   ros::NodeHandle node;
     controller controls;
+    ros::NodeHandle qnode;
 //    ImageConverter ic;
 
     bool land; // flag of landing

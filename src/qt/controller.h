@@ -21,6 +21,10 @@ static bool initialized = false;
 static struct termios initial_settings;
 static double test_flight_time = 10.0;
 
+bool linebufferedController(bool on );
+bool echoController(bool on );
+bool iskeypressed(unsigned timeout_ms ); 
+
 class controller
 {
 
@@ -48,7 +52,6 @@ public:
 	void setMovement(double, double, double);
 	void resetTwist();
 	void sendMovement(ros::NodeHandle);
-	void autoMode(ros::NodeHandle);
 	void testMove(ros::Rate, ros::NodeHandle);
 	void gainAltitude(double, ros::NodeHandle);
 	void nav_callback(const ardrone_autonomy::Navdata&);
@@ -68,7 +71,7 @@ private:
 	string command;
 };
 
-//void nav_callback(const ardrone_autonomy::Navdata& msg_in);
+void nav_callback(const ardrone_autonomy::Navdata& msg_in);
 /*{
 	battery = msg_in.batteryPercent;
 	//cout << "Getting battery life" << endl;
