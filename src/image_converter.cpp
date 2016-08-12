@@ -1,75 +1,59 @@
-
-
-
 #include "Header1.h"
-
-
-#include "Source1.cpp"
 #include "controller.cpp"
-
 
 using namespace std;
 using namespace cv;
 
-	
-	Mat cameraFeed;
-	Mat cameraFeedCropped;
-	//matrix storage for HSV image
-	Mat HSV;
-	//matrix storage for binary threshold image
-	Mat threshold;
-	//x and y values for the location of the object
-	
-	cv_bridge::CvImagePtr cv_ptr;
+Mat cameraFeed;
+Mat cameraFeedCropped;
+//matrix storage for HSV image
+Mat HSV;
+//matrix storage for binary threshold image
+Mat threshold;
+//x and y values for the location of the object
 
-	Mat gray;
-	Mat tmpImage;
+cv_bridge::CvImagePtr cv_ptr;
 
+Mat gray;
+Mat tmpImage;
+Mat croppedImage;
+Mat croppedCamera;
+Rect myROI;
+Rect croppedCameraROI;
+Mat resultOriginal;
+Mat resultMoving;
+Mat resultMovingFull;
+Mat binary_image;
+Mat movement;
+Mat imageb;
+Mat imageF;
 
-	cv::Mat croppedImage;
-	cv::Mat croppedCamera;
+double PrevMatchLocX = 0;
+double PrevMatchLocY = 0;
 
-	cv::Rect myROI;
-	cv::Rect croppedCameraROI;
-	Mat resultOriginal;
-	Mat resultMoving;
-	Mat resultMovingFull;
-	Mat binary_image;
-	Mat movement;
-	Mat imageb;
-	Mat imageF;
-	double PrevMatchLocX = 0;
-	double PrevMatchLocY = 0;
+int posCroppedCameraX = 0;
+int posCroppedCameraY = 0;
+int shiftCropped = 30;
+int prePosCroppedCameraX = 0;
+int prePosCroppedCameraY = 0;
+int prePrePosCroppedCameraX = 0;
+int prePrePosCroppedCameraY = 0;
+int OriginalMatchLocMovingX = 0;
+int OriginalMatchLocMovingY = 0;
 
-	int posCroppedCameraX = 0;
-	int posCroppedCameraY = 0;
-	int shiftCropped = 30;
-	int prePosCroppedCameraX = 0;
-	int prePosCroppedCameraY = 0;
-	int prePrePosCroppedCameraX = 0;
-	int prePrePosCroppedCameraY = 0;
+bool lost = true;
+bool freezeMoveImage = false;
+bool firstCapture = true;
+bool calibrate = true;
 
+int changeInX = 0;
+int changeInY = 0;
 
-	int OriginalMatchLocMovingX = 0;
-	int OriginalMatchLocMovingY = 0;
-
-	bool lost = true;
-	bool freezeMoveImage = false;
-	bool firstCapture = true;
-	
-
-	bool calibrate = true;
-
-	int changeInX = 0;
-	int changeInY = 0;
-
-	bool hitLeftWall = false;
-	bool hitRightWall = false;
-	bool hitUpWall = false;
-	bool hitDownWall = false;
-	
+bool hitLeftWall = false;
+bool hitRightWall = false;
+bool hitUpWall = false;
+bool hitDownWall = false;	
 bool doOnce = false;
-
 bool useFullCamera = false;
 
 int lostCount = 0;
@@ -114,7 +98,6 @@ int moveRight = 0;
 
 bool mouseControlMove = false;
 
-
 double totalConfidTracking = 0;
 double totalConfidLost = 0;
 int numLoopLost = 0;
@@ -123,8 +106,6 @@ int numTimesLost = 0;
 
 //This function uses the mouse clicks to setup the search image
 void CallBackFunc(int event, int x, int y, int flags, void* param) {
-
-
 
 	//Where the mouses' left button is clicked store the x, and y points into the rectangle 	variables
 	if ((event == EVENT_LBUTTONDOWN) && (mouseControlMove == false)) {
@@ -143,7 +124,6 @@ void CallBackFunc(int event, int x, int y, int flags, void* param) {
 
 		//this is just for testing
 		copyImage = true;
-		
 	} else if (event == EVENT_RBUTTONUP)  {
 		if (leftClickCount == 0) {
 			freezeFrame = true;
@@ -185,73 +165,60 @@ void CallBackFunc(int event, int x, int y, int flags, void* param) {
 	}
 }
 
-
-
-
 class ImageConverter
 {
-  ros::NodeHandle nh_;
-  image_transport::ImageTransport it_;
-  image_transport::Subscriber image_sub_;
-  image_transport::Publisher image_pub_;
+	ros::NodeHandle nh_;
+	image_transport::ImageTransport it_;
+	image_transport::Subscriber image_sub_;
+	image_transport::Publisher image_pub_;
   
-public:
-
+	public:
 
 	void setMouseLeftClickDown(int Rectanglex1, int Rectangley1);
 	void setMouseLeftRelease(int Rectanglex2, int Rectangley2);
 	void setLost(bool lostSetTo);
 
-
 	Mat getCroppedImage();
 	Mat getCameraFeed();
 	Mat getMatchingResults();
 
-  ImageConverter()
-    : it_(nh_)
-  {
-    // Subscrive to input video feed and publish output video feed
-    image_sub_ = it_.subscribe("/ardrone/image_raw", 1, 
-      &ImageConverter::imageCb, this);
-    image_pub_ = it_.advertise("/image_converter/output_video", 1);
+	ImageConverter() : it_(nh_) {
+		// Subscrive to input video feed and publish output video feed
+		image_sub_ = it_.subscribe("/ardrone/image_raw", 1, 
+			&ImageConverter::imageCb, this);
+		image_pub_ = it_.advertise("/image_converter/output_video", 1);
 
-    cv::namedWindow("Drone Camera");
-  }
+		cv::namedWindow("Drone Camera");
+	}
 
-  ~ImageConverter()
-  {
-    cv::destroyWindow("Drone Camera");
+	~ImageConverter() {
 
-  }
+	cv::destroyWindow("Drone Camera");
 
-  void imageCb(const sensor_msgs::ImageConstPtr& msg)
-  {
+	}
 
-	/// Localizing the best match with minMaxLoc
-	double minValMoving; double maxValMoving; Point minLocMoving; Point maxLocMoving;
-	Point matchLocMoving;
+	void imageCb(const sensor_msgs::ImageConstPtr& msg) {
 
-	int x1 = 0;
-	int y1 = 0;
-	int x2 = 0;
-	int y2 = 0;
+		/// Localizing the best match with minMaxLoc
+		double minValMoving; double maxValMoving; Point minLocMoving; Point maxLocMoving;
+		Point matchLocMoving;
 
-	double distance = 0;
-    
-    try
-    {
-      cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    }
-    catch (cv_bridge::Exception& e)
-    {
-      ROS_ERROR("cv_bridge exception: %s", e.what());
-      return;
-    }
+		int x1 = 0;
+		int y1 = 0;
+		int x2 = 0;
+		int y2 = 0;
 
+		double distance = 0;
 
-		
+		try {
+		  cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+		} catch (cv_bridge::Exception& e) {
+		  ROS_ERROR("cv_bridge exception: %s", e.what());
+		  return;
+		}
+
 		controls.nav_sub = nh_.subscribe("/ardrone/navdata", 1, &nav_callback);	
-		
+
 		linebufferedController(false);
 		echoController(false);
 
@@ -297,254 +264,183 @@ public:
 
 		if (searchImg == false) {
 
-
-						
-
-
-			/*
-			} else if  (cin.get() == 'w') {
-				controls.gainAltitude(1, nh_);
-				cout << "Gain altitude" << endl;
-			} else if  (cin.get() == 's') {
-				controls.gainAltitude(-1, nh_);
-				cout << "Lose altitude" << endl;
-			*/
-
-			//ros::spinOnce();
-			//loop_rate.sleep();
-
-
 			if (numLoops == 0) {
 				controls.pubLand = nh_.advertise<std_msgs::Empty>("/ardrone/land", 1);
 				controls.pubReset = nh_.advertise<std_msgs::Empty>("/ardrone/reset", 1);
 				controls.pubTakeoff = nh_.advertise<std_msgs::Empty>("/ardrone/takeoff", 1);
 				controls.pubTwist = nh_.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
 			}
+
 			ros::Rate loop_rate(100);
 
-			//int quit = 0;
-		
 			if (numLoops == 5) {
 				controls.sendTakeoff(nh_);
 				cout << "TakeOff" << endl;
 				cout << "inFlight: " << controls.inFlight << "\n";
 				cout << "Battery: " << controls.getBattery() << endl;
 			} else if ((numLoops > 140) && (controls.getAltitude() < 1.1) && (mouseControlMove == false)) {
-
 				controls.setMovement(0, 0, 0);
-
 				controls.sendMovement(nh_);
 				//cout << "Resetting\tnumLoops: " << numLoops << endl;
 				//cout << "inFlight: " << controls.inFlight << "\n";
 				cout << "Altitude: " << controls.getAltitude() << endl;
-				
 			} else if ((numLoops >= 140) && (mouseControlMove == false)) {
 				//after rising, keep position at 0,0,0
-
 				controls.setMovement(0, 0, 0);
-
 				controls.sendMovement(nh_);
 				//cout << "Hit 250" << endl;
 			}
-
-			
-
 		}
-		
-		
+
 		numLoops = numLoops + 1;
 
 		if (numLoops > 2000) {
 			numLoops = 2000;
 		}
-
-
-		
-	try {
-	
-	if (land == true) {
-			controls.resetTwist();
-			controls.setMovement(0, 0, 0);
-			controls.sendMovement(nh_);
-			controls.sendLand(nh_);
-			cout << "Sent Land\n";
-			cout << "inFlight: " << controls.inFlight << "\n";
-			land = false;
-	}
-
-	//set a callback duty for any rodent event
-	setMouseCallback("Drone Camera", CallBackFunc, NULL);
-
-
-	
-	if (mouseUp == true) {
-
-		cout << "x1 y1 (" << Rectanglex1 << ", " << Rectangley1 << ")" << endl;
-		cout << "x2 y2 (" << Rectanglex2 << ", " << Rectangley2 << ")" << endl;		
-		
-		
-			myROI = Rect(Rectanglex1, Rectangley1, abs(Rectanglex2 - Rectanglex1), 
-						       abs(Rectangley2 - Rectangley1));
-
-
-			Mat imgPanelRoi(cameraFeed, myROI);
-
-			imgPanelRoi.copyTo(croppedImage);
-		
-
-		mouseUp = false;
-		searchImg = true;
-		
-
-
-	}
-	
-
-
-
-		if (searchImg == true) {
-
-			//
-
 			
-
-			/// Create the result matrix
-			int resultOriginal_cols = cv_ptr->image.cols - croppedImage.cols + 1;
-			int resultOriginal_rows = cv_ptr->image.rows - croppedImage.rows + 1;
-
-
-
-			resultOriginal.create(resultOriginal_cols, resultOriginal_rows, CV_32FC1);
-
-			//cout << "confidPercent: " << confidPercent << endl;
-			if ((confidPercent < 0.5) && (lostCount <= 0)){
-				lost = true;
-				lostCount = 3;
-				numTimesLost = numTimesLost + 1;
-				//cout << "Lost!!!!!" << endl;
-
+		try {
+			if (land == true) {
+					controls.resetTwist();
+					controls.setMovement(0, 0, 0);
+					controls.sendMovement(nh_);
+					controls.sendLand(nh_);
+					cout << "Sent Land\n";
+					cout << "inFlight: " << controls.inFlight << "\n";
+					land = false;
 			}
-			cout << "Num times lost: " << numTimesLost << endl;
 
-			if (lost == true) {
+			//set a callback duty for any rodent event
+			setMouseCallback("Drone Camera", CallBackFunc, NULL);
+
+			if (mouseUp == true) {
+				cout << "x1 y1 (" << Rectanglex1 << ", " << Rectangley1 << ")" << endl;
+				cout << "x2 y2 (" << Rectanglex2 << ", " << Rectangley2 << ")" << endl;		
 				
-				int rowsCamera = cv_ptr->image.rows;
-				int rowsCropped = croppedImage.rows;
-				
-				if (croppedImage.type() == CV_8U) {
-					//convert from CV_8U to CV_8UC3
-					//cv::Mat fixImage;
-					//cvtColor(croppedImage,fixImage,CV_GRAY2RGB);
-					cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
-					//croppedImage = fixImage.clone();
-				}
-				
+				myROI = Rect(Rectanglex1, Rectangley1, abs(Rectanglex2 - Rectanglex1), 
+							abs(Rectangley2 - Rectangley1));
 
-				if ((croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows))  						{				
+				Mat imgPanelRoi(cameraFeed, myROI);
 
-					matchTemplate(cv_ptr->image, croppedImage, resultMovingFull, CV_TM_CCOEFF_NORMED);
-					useFullCamera = true;
-				}
+				imgPanelRoi.copyTo(croppedImage);
 
-				totalConfidTracking = totalConfidTracking + confidPercent;
-				numLoopTracking = numLoopTracking + 1;
-				
-				cout << "Confid Tracking: " << totalConfidTracking << "\tTracking Loops: " << numLoopTracking 						<< endl;
-
+				mouseUp = false;
+				searchImg = true;
 			}
-			else {
 
-				totalConfidLost = totalConfidLost + confidPercent;
-				numLoopLost = numLoopLost + 1;
+			if (searchImg == true) {
+				/// Create the result matrix
+				int resultOriginal_cols = cv_ptr->image.cols - croppedImage.cols + 1;
+				int resultOriginal_rows = cv_ptr->image.rows - croppedImage.rows + 1;
 
-				cout << "Confid Lost: " << totalConfidLost << "\tLost Loops: " << numLoopLost 						<< endl;
+				resultOriginal.create(resultOriginal_cols, resultOriginal_rows, CV_32FC1);
 
-				int width = croppedImage.cols + shiftCropped * 2;
-				int height = croppedImage.rows + shiftCropped * 2;
-
-				x1 = posCroppedCameraX;
-				y1 = posCroppedCameraY;
-
-
-				if (posCroppedCameraX <= 0) {
-					x1 = 0;
-				}
-				if (posCroppedCameraY <= 0) {
-					y1 = 0;
+				if ((confidPercent < 0.5) && (lostCount <= 0)){
+					lost = true;
+					lostCount = 3;
+					numTimesLost = numTimesLost + 1;
 				}
 
-				if ((x1 + width < cv_ptr->image.cols) && (y1 + height < cv_ptr->image.rows)) {
-					croppedCameraROI = Rect(x1, y1, width, height);
-					Mat imgPanelRoi(cv_ptr->image, croppedCameraROI);
-					imgPanelRoi.copyTo(croppedCamera);
+				cout << "Num times lost: " << numTimesLost << endl;
 
-					//use this to search the whole image - warning other changes to position calc
-					//need to be made to use this!!!
-					//cv_ptr->image.copyTo(croppedCamera);
-				}
-
-
-				//make sure the 'search area' does not exceded the cameras image
-				x1 = PrevMatchLocX;
-				y1 = PrevMatchLocY;
-				x2 = x1 + croppedImage.cols;
-				y2 = y1 + croppedImage.rows;
-				if (x2 > cv_ptr->image.cols) {
-					x2 = cv_ptr->image.cols;
-				}
-
-				if (y2 > cv_ptr->image.rows) {
-					y2 = cv_ptr->image.rows;
-				}
-
-
-				/// Do the Matching and Normalize
-
-				/*
-				if (croppedImage.type() == CV_8U) {
-					//convert from CV_8U to CV_8UC3
-					//cv::Mat fixImage;
-					//cvtColor(croppedImage,fixImage,CV_GRAY2RGB);
-					cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
-					//croppedImage = fixImage.clone();
-				}
-				*/
-
-				if ((!(croppedCamera.empty())) && (croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows)) {
-					if (useFullCamera == true) {
-						matchTemplate(croppedCamera, croppedImage, resultMovingFull,  								CV_TM_CCOEFF_NORMED);
-					} else {
-						matchTemplate(croppedCamera, croppedImage, resultMoving,  								CV_TM_CCOEFF_NORMED);
+				if (lost == true) {
+					int rowsCamera = cv_ptr->image.rows;
+					int rowsCropped = croppedImage.rows;
+					
+					if (croppedImage.type() == CV_8U) {
+						cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
 					}
+
+					if ((croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows)) {
+						matchTemplate(cv_ptr->image, croppedImage, resultMovingFull, CV_TM_CCOEFF_NORMED);
+						useFullCamera = true;
+					}
+
+					totalConfidTracking = totalConfidTracking + confidPercent;
+					numLoopTracking = numLoopTracking + 1;
 					
-					
+					cout << "Confid Tracking: " << totalConfidTracking << "\tTracking Loops: " << numLoopTracking 						<< endl;
+
+				} else {
+					totalConfidLost = totalConfidLost + confidPercent;
+					numLoopLost = numLoopLost + 1;
+
+					cout << "Confid Lost: " << totalConfidLost << "\tLost Loops: " << numLoopLost 						<< endl;
+
+					int width = croppedImage.cols + shiftCropped * 2;
+					int height = croppedImage.rows + shiftCropped * 2;
+
+					x1 = posCroppedCameraX;
+					y1 = posCroppedCameraY;
+
+					if (posCroppedCameraX <= 0) {
+						x1 = 0;
+					}
+					if (posCroppedCameraY <= 0) {
+						y1 = 0;
+					}
+
+					if ((x1 + width < cv_ptr->image.cols) && (y1 + height < cv_ptr->image.rows)) {
+						croppedCameraROI = Rect(x1, y1, width, height);
+						Mat imgPanelRoi(cv_ptr->image, croppedCameraROI);
+						imgPanelRoi.copyTo(croppedCamera);
+
+						//use this to search the whole image - warning other changes to position calc
+						//need to be made to use this!!!
+						//cv_ptr->image.copyTo(croppedCamera);
+					}
+
+					//make sure the 'search area' does not exceded the cameras image
+					x1 = PrevMatchLocX;
+					y1 = PrevMatchLocY;
+					x2 = x1 + croppedImage.cols;
+					y2 = y1 + croppedImage.rows;
+
+					if (x2 > cv_ptr->image.cols) {
+						x2 = cv_ptr->image.cols;
+					}
+
+					if (y2 > cv_ptr->image.rows) {
+						y2 = cv_ptr->image.rows;
+					}
+
+					/// Do the Matching and Normalize
+
+					/*
+					if (croppedImage.type() == CV_8U) {
+						//convert from CV_8U to CV_8UC3
+						//cv::Mat fixImage;
+						//cvtColor(croppedImage,fixImage,CV_GRAY2RGB);
+						cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
+						//croppedImage = fixImage.clone();
+					}
+					*/
+
+					if ((!(croppedCamera.empty())) && (croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows)) {
+						if (useFullCamera == true) {
+							matchTemplate(croppedCamera, croppedImage, resultMovingFull, CV_TM_CCOEFF_NORMED);
+						} else {
+							matchTemplate(croppedCamera, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
+						}
+					}
 				}
-			}
 
+				if (useFullCamera == true) {
+					minMaxLoc(resultMovingFull, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
+				} else {
+					minMaxLoc(resultMoving, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
+				}
 
+				useFullCamera = false;
+				confidPercent = maxValMoving;
+				/// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
+				matchLocMoving = maxLocMoving;
+				distance = PrevMatchLocX - matchLocMoving.x;
+				//distanceY = PrevMatchLocY - matchLocMoving.y;
+				lostCount = lostCount - 1;
 
-			if (useFullCamera == true) {
-				minMaxLoc(resultMovingFull, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
-			} else {
-				minMaxLoc(resultMoving, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
-			}
-			useFullCamera = false;
-			
-
-			confidPercent = maxValMoving;
-			/// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
-			
-			matchLocMoving = maxLocMoving;
-
-
-			distance = PrevMatchLocX - matchLocMoving.x;
-			//distanceY = PrevMatchLocY - matchLocMoving.y;
-			
-
-			lostCount = lostCount - 1;
-			if (lostCount < 0) {
-				lostCount = 0;
-			}
+				if (lostCount < 0) {
+					lostCount = 0;
+				}
 
 				if (lost == true) {
 					posCroppedCameraX = matchLocMoving.x - shiftCropped;
@@ -561,11 +457,7 @@ public:
 					//store original matchLocMoving values to be used as a reference
 					OriginalMatchLocMovingX = matchLocMoving.x;
 					OriginalMatchLocMovingY = matchLocMoving.y;
-
-					
-				}
-				else {
-
+				} else {
 					//this is to keep it stable when tracking an object
 					//store 2nd previous camera position in prePrePosCroppedCamera
 					prePrePosCroppedCameraX = prePosCroppedCameraX;
@@ -606,7 +498,6 @@ public:
 						hitUpWall = true;
 					}
 
-					
 					if ((posCroppedCameraX > shiftCropped) && (hitLeftWall == true)) {
 						posCroppedCameraX = 0;
 						prePosCroppedCameraX = shiftCropped;
@@ -635,42 +526,28 @@ public:
 						hitDownWall = false;
 					}
 
-
-
-
-
 					PrevMatchLocX = matchLocMoving.x;
-					PrevMatchLocY = matchLocMoving.y;
-
-					
+					PrevMatchLocY = matchLocMoving.y;	
 				}
-
 
 				x1 = posCroppedCameraX;
 				y1 = posCroppedCameraY;
 
-
 				if (x1 > cv_ptr->image.cols) {
 					x1 = cv_ptr->image.cols;
 					hitRightWall = true;
-				}
-				else if (x1 <= 0) {
+				} else if (x1 <= 0) {
 					x1 = 0;
-					
 				}
-				
-
-
+					
 				if (y1 > cv_ptr->image.rows) {
 					y1 = cv_ptr->image.rows;
-				}
-				else if (y1 <= 0) {
+				} else if (y1 <= 0) {
 					y1 = 0;
 				}
 
 				x2 = x1 + croppedImage.cols + shiftCropped * 2;
 				y2 = y1 + croppedImage.rows + shiftCropped * 2;
-
 
 				double xVelocity = ((double) (((FRAME_HEIGHT) / 2) - ((y1 + y2)  / 2))) / 500.0;
 				double yVelocity = ((double) ((FRAME_WIDTH / 2) -  ((x1 + x2) / 2))) / 900.0;
@@ -687,15 +564,12 @@ public:
 					y2 = 0;
 				}
 
-
 				//draw blue rectangle around 
 				rectangle(cv_ptr->image, Point(x1, y1), Point(x2, y2), Scalar(255, 0, 0), 2, 8, 0);
 
-
-
-				double distance = sqrt(abs(((x1 + x2) / 2 - FRAME_WIDTH / 2)) * abs(((x1 + x2) / 2 - 						FRAME_WIDTH / 2)) + abs((y1 + y2) / 2 - FRAME_HEIGHT) * 						abs((y1 + y2) / 2 - FRAME_HEIGHT));
-
-				//yVelocity = 0;
+				double distance = sqrt(abs(((x1 + x2) / 2 - FRAME_WIDTH / 2)) * abs(((x1 + x2) / 2 - 
+										FRAME_WIDTH / 2)) + abs((y1 + y2) / 2 - FRAME_HEIGHT) * 
+										abs((y1 + y2) / 2 - FRAME_HEIGHT));
 
 				if (distance < 80) {
 					xVelocity = 0;
@@ -708,30 +582,21 @@ public:
 						controls.setMovement(xVelocity, yVelocity, 0);
 						controls.sendMovement(nh_);
 					}
+
 					lastGoodxVel = xVelocity;
 					lastGoodyVel = yVelocity;
 
-					cout << "Flying xVel: " << xVelocity << "\tyVel: " << yVelocity << 							"\tconfidPercent: " << confidPercent << endl;
-				
+					cout << "Flying xVel: " << xVelocity << "\tyVel: " << yVelocity << "\tconfidPercent: " << confidPercent << endl;
 				} else {
-					
-					if (lostCount > 0) {
-						//controls.setMovement(lastGoodxVel, lastGoodyVel, 0);
-						//controls.sendMovement(nh_);
-					} else {
+					if (lostCount <= 0) {
 						cout << "last xvel: " << lastGoodxVel << "\tlast yvel: " << lastGoodyVel << "\tconfidence: " << confidPercent << endl;
 						
 						controls.setMovement(0, 0, 0);
-
-							controls.sendMovement(nh_);
+						controls.sendMovement(nh_);
 					}
-					//cout << "Hovering"  << "\tconfidPercent: " << confidPercent << endl;
 
 					geometry_msgs::Twist getTwistInfo = controls.getTwist();
-					
-					//cout << "Twist x: " << getTwistInfo.linear.x << "\tTwist y: " << 						//getTwistInfo.linear.y << "\tTwist z: " << getTwistInfo.linear.z << endl;
 				}
-
 
 				if (lost == true) {
 					matchLocMoving.x = shiftCropped;
@@ -741,20 +606,18 @@ public:
 					prePosCroppedCameraX = 0;
 					prePosCroppedCameraY = 0;
 				}
-				lost = false;
 
+				lost = false;
 
 				x1 = posCroppedCameraX + matchLocMoving.x;
 				y1 = posCroppedCameraY + matchLocMoving.y;
-
-
-
 
 				if (x1 > cv_ptr->image.cols) {
 					x1 = cv_ptr->image.cols;
 				} else if (x1 <= 0) {
 					x1 = 0;
 				}
+				
 				if (y1 > cv_ptr->image.rows) {
 					y1 = cv_ptr->image.rows;
 				} else if (y1 <= 0) {
@@ -775,80 +638,47 @@ public:
 				} else if (y2 <= 0) {
 					y2 = 0;
 				}
-				
+					
 				double velocity = 0.1;
 				
 				angle = atan2((y1 + (y2 - y1) / 2 - FRAME_HEIGHT / 2), 
 					(x1 + (x2 - x1) / 2 - FRAME_WIDTH / 2)) / 3.14159265 * 180;
-				/*
-				if ((angle > 0) && (angle < 90)) {
-
-					cout << "bottom right quadrant" << endl;
-					xVelocity = velocity / (angle ^
-				}
-				else if ((angle > 90) && (angle < 180)) {
-					cout << "bottom left quadrant" << endl;
-				}
-				else if ((angle < -90) && (angle > -180)) {
-					cout << "top left quadrant" << endl;
-				}
-				else if ((angle < 0) && (angle > -90)) {
-					cout << "top right  quadrant" << endl;
-				}
-				*/
-
-	
-
-
-				/*
-				
-
-
-				
-				cout << "\t      angle: " << angle << "\tdistsance: " << distance << endl;
-				*/
 
 				//draw green rectangle around object
 				if (useFullCamera == false) {
 					rectangle(cv_ptr->image, Point(x1, y1), Point(x2, y2), Scalar(0, 255, 0), 2, 8, 0);
 					line(cv_ptr->image, Point(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2), 						Point(FRAME_WIDTH / 2,(FRAME_HEIGHT) / 2), Scalar(0, 255, 0), 3, 1, 0);
 				}
-			circle(resultMoving, matchLocMoving, 15, Scalar(255, 255, 255), 2, 8, 0);
-			
 
-			if ((!(resultMoving.empty())) && useFullCamera == false) {
-				imshow("Results Moving", resultMoving);
+				circle(resultMoving, matchLocMoving, 15, Scalar(255, 255, 255), 2, 8, 0);
+				
+				if ((!(resultMoving.empty())) && useFullCamera == false) {
+					imshow("Results Moving", resultMoving);
+				}
+				if (!(croppedImage.empty())) {
+					imshow("Search Images", croppedImage);
+				}
 			}
-			if (!(croppedImage.empty())) {
-				imshow("Search Images", croppedImage);
+
+			if (copyImage == true) {
+				cameraFeed = cv_ptr->image.clone();
+				copyImage = false;
 			}
 
+			// Update GUI Window
+			if (freezeFrame == false) {
+		    		cv::imshow("Drone Camera", cv_ptr->image);
+			}
 
+		    cv::waitKey(3);
+		    
+		    // Output modified video stream
+		    image_pub_.publish(cv_ptr->toImageMsg());
+		} catch (...) {
+			posCroppedCameraX = prePosCroppedCameraX;
+			posCroppedCameraY = prePosCroppedCameraY;
 		}
-
-	if (copyImage == true) {
-		cameraFeed = cv_ptr->image.clone();
-		copyImage = false;
 	}
-
-	// Update GUI Window
-	if (freezeFrame == false) {
-    		cv::imshow("Drone Camera", cv_ptr->image);
-	}
-    cv::waitKey(3);
-    
-    // Output modified video stream
-    image_pub_.publish(cv_ptr->toImageMsg());
-
-	
-
-	}
-	catch (...) {
-		posCroppedCameraX = prePosCroppedCameraX;
-		posCroppedCameraY = prePosCroppedCameraY;
-	}
-	
-  }
 };
 
 void ImageConverter::setMouseLeftClickDown(int x1, int y1) {
@@ -887,44 +717,14 @@ Mat ImageConverter::getMatchingResults() {
 void ImageConverter::setLost(bool lostSetTo) {
 	
 	lost = lostSetTo;
-	
-	
+
 }
 
-int main(int argc2, char** argv2)
-{
+int main(int argc2, char** argv2) {
 
 	int keyPressed;
-		
 	int inputLoop = 0;	
-	/*
-	while (true) {
 
-
-			char input;
-			cin>>input;
-			cout << input << endl;
-			if (input == 'i') {
-				cout << "up" << endl;
-				inputLoop = 10;
-			} else if (input == 'j') {
-				cout << "left" << endl;
-				inputLoop = 10;
-			} else if (input == 'k') {
-				cout << "backwards" << endl;
-				inputLoop = 10;
-			} else if (input == 'l') {
-				cout << "right" << endl;
-			}
-				inputLoop = inputLoop - 1;
-
-			cout << inputLoop << endl;
-
-			if (inputLoop > 0) {
-				cout << "key pushed" << endl;
-			}
-	}
-	*/
 	argc = argc2;
 	argv = argv2;
 
@@ -937,34 +737,9 @@ int main(int argc2, char** argv2)
 	  	ros::init(argc, argv, "image_converter");
 	}
 
-		
-
-	if (!initialize())
-	{	
+	if (!initialize()) {	
 		return 1;
 	}
-
-	
-
-	// try {
-
-	//   linebuffered( false );
-	//   echo( false );
-
-	//   while (true)
-	//     {
-	//   cout << "Zzz..." << flush;
-	//   if (iskeypressed( 500 ) && cin.get() == '\n') break;
-	//     }
-
-	//   echo();
-	//   linebuffered();
-	//   }
-	// catch (...) { }
-
-
-	
-	//ros::NodeHandle node;
 
   	ImageConverter ic;
 	
@@ -973,4 +748,3 @@ int main(int argc2, char** argv2)
 	return 0;
 
 }
-
