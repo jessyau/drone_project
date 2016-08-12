@@ -107,7 +107,7 @@ int numTimesLost = 0;
 //This function uses the mouse clicks to setup the search image
 void CallBackFunc(int event, int x, int y, int flags, void* param) {
 
-	//Where the mouses' left button is clicked store the x, and y points into the rectangle 	variables
+	//Where the mouses' left button is clicked store the x, and y points into the rectangle variables
 	if ((event == EVENT_LBUTTONDOWN) && (mouseControlMove == false)) {
 		cout << "Mouse Down (" << x << ", " << y << ")" << endl;
 		Rectanglex1 = x;
@@ -165,8 +165,7 @@ void CallBackFunc(int event, int x, int y, int flags, void* param) {
 	}
 }
 
-class ImageConverter
-{
+class ImageConverter {
 	ros::NodeHandle nh_;
 	image_transport::ImageTransport it_;
 	image_transport::Subscriber image_sub_;
@@ -278,7 +277,8 @@ class ImageConverter
 				cout << "TakeOff" << endl;
 				cout << "inFlight: " << controls.inFlight << "\n";
 				cout << "Battery: " << controls.getBattery() << endl;
-			} else if ((numLoops > 140) && (controls.getAltitude() < 1.1) && (mouseControlMove == false)) {
+			} else if ((numLoops > 140) && (controls.getAltitude() < 1.1) && 
+					(mouseControlMove == false)) {
 				controls.setMovement(0, 0, 0);
 				controls.sendMovement(nh_);
 				//cout << "Resetting\tnumLoops: " << numLoops << endl;
@@ -350,7 +350,9 @@ class ImageConverter
 						cvtColor(croppedImage, croppedImage, CV_GRAY2RGB);
 					}
 
-					if ((croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows)) {
+					if ((croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < 
+						cv_ptr->image.rows)) {
+
 						matchTemplate(cv_ptr->image, croppedImage, resultMovingFull, CV_TM_CCOEFF_NORMED);
 						useFullCamera = true;
 					}
@@ -358,13 +360,14 @@ class ImageConverter
 					totalConfidTracking = totalConfidTracking + confidPercent;
 					numLoopTracking = numLoopTracking + 1;
 					
-					cout << "Confid Tracking: " << totalConfidTracking << "\tTracking Loops: " << numLoopTracking 						<< endl;
+					cout << "Confid Tracking: " << totalConfidTracking << "\tTracking Loops: " << 
+						numLoopTracking << endl;
 
 				} else {
 					totalConfidLost = totalConfidLost + confidPercent;
 					numLoopLost = numLoopLost + 1;
 
-					cout << "Confid Lost: " << totalConfidLost << "\tLost Loops: " << numLoopLost 						<< endl;
+					cout << "Confid Lost: " << totalConfidLost << "\tLost Loops: " << numLoopLost << endl;
 
 					int width = croppedImage.cols + shiftCropped * 2;
 					int height = croppedImage.rows + shiftCropped * 2;
@@ -415,24 +418,31 @@ class ImageConverter
 					}
 					*/
 
-					if ((!(croppedCamera.empty())) && (croppedImage.cols < cv_ptr->image.cols) && (croppedImage.rows < cv_ptr->image.rows)) {
+					if ((!(croppedCamera.empty())) && (croppedImage.cols < cv_ptr->image.cols) && 
+						(croppedImage.rows < cv_ptr->image.rows)) {
+
 						if (useFullCamera == true) {
-							matchTemplate(croppedCamera, croppedImage, resultMovingFull, CV_TM_CCOEFF_NORMED);
+							matchTemplate(croppedCamera, croppedImage, resultMovingFull, 
+										CV_TM_CCOEFF_NORMED);
 						} else {
-							matchTemplate(croppedCamera, croppedImage, resultMoving, CV_TM_CCOEFF_NORMED);
+							matchTemplate(croppedCamera, croppedImage, resultMoving, 
+										CV_TM_CCOEFF_NORMED);
 						}
 					}
 				}
 
 				if (useFullCamera == true) {
-					minMaxLoc(resultMovingFull, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
+					minMaxLoc(resultMovingFull, &minValMoving, &maxValMoving, &minLocMoving, 
+							&maxLocMoving, Mat());
 				} else {
-					minMaxLoc(resultMoving, &minValMoving, &maxValMoving, &minLocMoving, &maxLocMoving, Mat());
+					minMaxLoc(resultMoving, &minValMoving, &maxValMoving, &minLocMoving, 
+							&maxLocMoving, Mat());
 				}
 
 				useFullCamera = false;
 				confidPercent = maxValMoving;
-				/// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
+				// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. 
+				// For all the other methods, the higher the better
 				matchLocMoving = maxLocMoving;
 				distance = PrevMatchLocX - matchLocMoving.x;
 				//distanceY = PrevMatchLocY - matchLocMoving.y;
@@ -469,8 +479,10 @@ class ImageConverter
 
 					//if not the first time time finding image, then
 					if (calibrate == false) {
-						posCroppedCameraX = posCroppedCameraX + prePosCroppedCameraX - prePrePosCroppedCameraX;
-						posCroppedCameraY = posCroppedCameraY + prePosCroppedCameraY - prePrePosCroppedCameraY;
+						posCroppedCameraX = posCroppedCameraX + prePosCroppedCameraX - 
+											prePrePosCroppedCameraX;
+						posCroppedCameraY = posCroppedCameraY + prePosCroppedCameraY - 
+											prePrePosCroppedCameraY;
 					}
 
 					calibrate = false;
@@ -505,9 +517,13 @@ class ImageConverter
 						hitLeftWall = false;
 					}
 					
-					if ((posCroppedCameraX < cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 2) - 51) && (hitRightWall == true)) {
-						posCroppedCameraX = cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 2) - shiftCropped - 1;
-						prePosCroppedCameraX = cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 2) - 1;
+					if ((posCroppedCameraX < cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 
+						2) - 51) && (hitRightWall == true)) {
+
+						posCroppedCameraX = cv_ptr->image.cols - (croppedImage.cols + shiftCropped * 
+											2) - shiftCropped - 1;
+						prePosCroppedCameraX = cv_ptr->image.cols - (croppedImage.cols + 
+											shiftCropped * 2) - 1;
 						matchLocMoving.x = shiftCropped;
 						hitRightWall = false;
 					}
@@ -519,9 +535,13 @@ class ImageConverter
 						hitUpWall = false;
 					}
 
-					if ((posCroppedCameraY < cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - 51) && (hitDownWall == true)) {
-						posCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - shiftCropped - 1;
-						prePosCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + shiftCropped * 2) - 1;
+					if ((posCroppedCameraY < cv_ptr->image.rows - (croppedImage.rows + 
+						shiftCropped * 2) - 51) && (hitDownWall == true)) {
+
+						posCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + 
+											shiftCropped * 2) - shiftCropped - 1;
+						prePosCroppedCameraY = cv_ptr->image.rows - (croppedImage.rows + 
+											shiftCropped * 2) - 1;
 						matchLocMoving.y = shiftCropped;
 						hitDownWall = false;
 					}
@@ -586,10 +606,12 @@ class ImageConverter
 					lastGoodxVel = xVelocity;
 					lastGoodyVel = yVelocity;
 
-					cout << "Flying xVel: " << xVelocity << "\tyVel: " << yVelocity << "\tconfidPercent: " << confidPercent << endl;
+					cout << "Flying xVel: " << xVelocity << "\tyVel: " << yVelocity << 
+							"\tconfidPercent: " << confidPercent << endl;
 				} else {
 					if (lostCount <= 0) {
-						cout << "last xvel: " << lastGoodxVel << "\tlast yvel: " << lastGoodyVel << "\tconfidence: " << confidPercent << endl;
+						cout << "last xvel: " << lastGoodxVel << "\tlast yvel: " << lastGoodyVel <<
+								 "\tconfidence: " << confidPercent << endl;
 						
 						controls.setMovement(0, 0, 0);
 						controls.sendMovement(nh_);
@@ -647,7 +669,8 @@ class ImageConverter
 				//draw green rectangle around object
 				if (useFullCamera == false) {
 					rectangle(cv_ptr->image, Point(x1, y1), Point(x2, y2), Scalar(0, 255, 0), 2, 8, 0);
-					line(cv_ptr->image, Point(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2), 						Point(FRAME_WIDTH / 2,(FRAME_HEIGHT) / 2), Scalar(0, 255, 0), 3, 1, 0);
+					line(cv_ptr->image, Point(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2), 
+						Point(FRAME_WIDTH / 2,(FRAME_HEIGHT) / 2), Scalar(0, 255, 0), 3, 1, 0);
 				}
 
 				circle(resultMoving, matchLocMoving, 15, Scalar(255, 255, 255), 2, 8, 0);

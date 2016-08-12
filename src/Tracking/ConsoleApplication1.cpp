@@ -1,6 +1,5 @@
 //object recognition for AR Drone
 
-
 #include "stdafx.h"
 #include <sstream>
 #include <string>
